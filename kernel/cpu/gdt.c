@@ -15,13 +15,13 @@ struct GdtEntry
     u8  access;
     u8  granularity;
     u8  base_hi;
-} __attribute__((packed));
+} PACKED; 
 
 struct Gdtr
 {
     u16 limit;
     u32 base;
-} __attribute__((packed));
+} PACKED;
 
 ///////////////////////////////////////////////
 
@@ -50,20 +50,20 @@ static inline void gdt_flush(struct Gdtr* gdtr)
 
 static void gdt_set_gate(u8 num, u32 base, u32 limit, u8 access, u8 gran)
 {
-    gdt[num].base_lo      = (base & 0xFFFF);
-    gdt[num].base_mid     = (base >> 16) & 0xFF;
-    gdt[num].base_hi      = (base >> 24) & 0xFF;
-    gdt[num].limit_lo     = (limit & 0xFFFF);
-    gdt[num].granularity  = (limit >> 16) & 0x0F;
+    gdt[num].base_lo     =  (base & 0xFFFF);
+    gdt[num].base_mid    =  (base >> 16) & 0xFF;
+    gdt[num].base_hi     =  (base >> 24) & 0xFF;
+    gdt[num].limit_lo    =  (limit & 0xFFFF);
+    gdt[num].granularity =  (limit >> 16) & 0x0F;
     gdt[num].granularity |= gran & 0xF0;
-    gdt[num].access       = access;
+    gdt[num].access      =  access;
 }
 
 ///////////////////////////////////////////////
 
 void gdt_init(void)
 {
-    gdtr.limit = sizeof(struct GdtEntry) * GDT_ENTRIES - 1;
+    gdtr.limit = (u16)sizeof(struct GdtEntry) * GDT_ENTRIES - 1;
     gdtr.base  = (u32)(uptr)&gdt;
 
     gdt_set_gate(0, 0, 0, 0, 0);

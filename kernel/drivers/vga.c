@@ -48,8 +48,8 @@ void vga_putc(char c, u8 col)
     switch (c)
     {
     case '\n':
-        if (vga.cx > 0) vga.cx--;
-        vga.buf[index] = entry(' ', VGA_BLACK);
+        vga.cx = 0;
+        vga.cy++;
         break;
     default:
         vga.buf[index] = entry(c, col);

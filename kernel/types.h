@@ -10,4 +10,6 @@ typedef uint64_t  u64;
 
 typedef uintptr_t uptr;
 
+#define PACKED __attribute((packed))
+
 #endif
