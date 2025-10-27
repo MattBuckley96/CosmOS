@@ -2,6 +2,7 @@
 #define TYPES_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef uint8_t   u8;
 typedef uint16_t  u16;
@@ -11,5 +12,6 @@ typedef uint64_t  u64;
 typedef uintptr_t uptr;
 
 #define PACKED __attribute((packed))
+#define NAKED  __attribute((naked))
 
 #endif

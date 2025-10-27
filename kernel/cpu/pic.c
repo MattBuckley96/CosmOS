@@ -1,7 +1,8 @@
 #include "pic.h"
 #include "io.h"
 
-void pic_remap(void) {
+void pic_remap(void)
+{
     uint8_t master_mask, slave_mask;
 
     master_mask = inb(PIC_MASTER_DATA);
@@ -23,9 +24,12 @@ void pic_remap(void) {
     outb(PIC_SLAVE_DATA,  slave_mask);
 }
 
-void pic_send_eoi(uint8_t irq) {
-    if (irq >= 8) {
+void pic_send_eoi(uint8_t irq)
+{
+    if (irq >= 8)
+    {
         outb(PIC_SLAVE_COMMAND, PIC_EOI);
     }
+
     outb(PIC_MASTER_COMMAND, PIC_EOI);
 }

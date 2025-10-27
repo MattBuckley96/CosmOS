@@ -31,7 +31,7 @@ static struct Idtr idtr;
 
 ///////////////////////////////////////////////
 
-static void isr_default(void)
+NAKED void isr_default(void)
 {
     asm volatile(
         "pusha\n"
@@ -66,8 +66,8 @@ void idt_init(void)
 
     pic_remap();
 
-    // mask all IRQs for now
-    outb(PIC_MASTER_DATA, 0xFF);
+    // mask all IRQs but keyboard
+    outb(PIC_MASTER_DATA, 0xFD);
     outb(PIC_SLAVE_DATA,  0xFF);
 
     asm volatile("lidt %0" : : "m"(idtr));

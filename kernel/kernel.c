@@ -1,6 +1,8 @@
 #include "cpu/gdt.h"
 #include "cpu/idt.h"
+
 #include "drivers/vga.h"
+#include "drivers/keyboard.h"
 
 void klog(const char* msg)
 {
@@ -8,14 +10,14 @@ void klog(const char* msg)
     vga_puts("OK", VGA_LIGHT_GREEN);
     vga_puts(" ] ", VGA_WHITE);
     vga_puts(msg, VGA_LIGHT_GRAY);
-    vga_putc('\n', VGA_BLACK);
+    vga_putc('\n', VGA_LIGHT_GRAY);
 }
 
 void print_splash(void)
 {
     vga_puts("Welcome to the ", VGA_WHITE);
     vga_puts("Cosm", VGA_LIGHT_MAGENTA);
-    vga_puts("OS\n", VGA_LIGHT_YELLOW);
+    vga_puts("OS\n\n", VGA_LIGHT_YELLOW);
 }
 
 void kmain(void)
@@ -29,6 +31,18 @@ void kmain(void)
 
     klog("Initializing IDT...");
     idt_init();
+
+    klog("Initializing Keyboard...");
+    keyboard_init();
+
+    while (1)
+    {
+        char c = keyboard_getc();
+        if (c)
+        {
+            vga_putc(c, VGA_LIGHT_GRAY);
+        }
+    }
 
     while (1)
     {

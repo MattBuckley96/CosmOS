@@ -43,13 +43,17 @@ void vga_clear(void)
 
 void vga_putc(char c, u8 col)
 {
-    u8 index = vga.cy * VGA_WIDTH + vga.cx;
+    u16 index = vga.cy * VGA_WIDTH + vga.cx;
 
     switch (c)
     {
     case '\n':
         vga.cx = 0;
         vga.cy++;
+        break;
+    case '\b':
+        if (vga.cx > 0) vga.cx--;
+        vga.buf[index] = entry(' ', VGA_BLACK);
         break;
     default:
         vga.buf[index] = entry(c, col);
