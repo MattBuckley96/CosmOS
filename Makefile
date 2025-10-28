@@ -5,7 +5,7 @@ LD = $(CROSS)ld
 
 ################################################
 
-CFLAGS  = -m32 -ffreestanding -fno-builtin -g -Ikernel
+CFLAGS  = -m32 -ffreestanding -fno-builtin -g -Ikernel -Ikernel/libc
 ASFLAGS = -m32 -ffreestanding
 LDFLAGS = -T linker.ld -nostdlib
 
