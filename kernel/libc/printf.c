@@ -2,6 +2,8 @@
 #include "printf.h"
 #include "drivers/vga.h"
 
+///////////////////////////////////////////////
+
 static void put_num(int n)
 {
     if (n < 0)
@@ -18,6 +20,8 @@ static void put_num(int n)
     vga_putc((n % 10) + '0', VGA_LIGHT_GRAY);
 }
 
+///////////////////////////////////////////////
+
 void printf(const char* format, ...)
 {
     va_list args;
@@ -31,6 +35,9 @@ void printf(const char* format, ...)
             format++;
             switch (*format)
             {
+            case 'c':
+                vga_putc(va_arg(args, int), VGA_LIGHT_GRAY);
+                break;
             case 's':
             case 'S':
                 vga_puts(va_arg(args, char*), VGA_LIGHT_GRAY);

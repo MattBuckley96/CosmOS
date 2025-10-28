@@ -34,7 +34,7 @@ void vga_clear(void)
 {
     for (u16 i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
     {
-        vga.buf[i] = entry(' ', VGA_BLACK);
+        vga.buf[i] = 0;
     }
 
     vga.cx = 0;
