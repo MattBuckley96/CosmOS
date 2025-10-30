@@ -30,12 +30,14 @@ OBJS   := $(C_OBJS) $(S_OBJS)
 
 KERNEL_BIN = $(BUILD_DIR)/kernel.bin
 ISO_DIR    = $(BUILD_DIR)/iso
-ISO_FILE   = $(ISO_DIR)/kernel.iso
+ISO        = $(ISO_DIR)/kernel.iso
+IMG_DIR    = $(BUILD_DIR)/img
+IMG        = $(IMG_DIR)/disk.img
 
 ################################################
 
-.PHONY: all iso run clean
-all: $(KERNEL_BIN) iso
+.PHONY: all iso run clean disk
+all: $(KERNEL_BIN) iso disk
 
 ################################################
 
@@ -59,12 +61,17 @@ iso: $(KERNEL_BIN)
 	mkdir -p $(ISO_DIR)/boot/grub
 	mv $(KERNEL_BIN) $(ISO_DIR)/boot/kernel.bin
 	cp $(GRUB_DIR)/grub.cfg $(ISO_DIR)/boot/grub/grub.cfg
-	grub-mkrescue -o $(ISO_FILE) $(ISO_DIR)
+	grub-mkrescue -o $(ISO) $(ISO_DIR)
+
+disk: $(IMG_DIR)
+	@if [ ! -f $(IMG) ]; then \
+		qemu-img create $(IMG) 10M; \
+	fi 
 
 ################################################
 
-run: iso
-	qemu-system-i386 -cdrom $(ISO_FILE) -m 512 
+run: iso disk
+	qemu-system-i386 -cdrom $(ISO) -m 512 -hda $(IMG)
 
 ################################################
 
@@ -73,6 +80,9 @@ $(BUILD_DIR):
 
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
+
+$(IMG_DIR):
+	mkdir -p $(IMG_DIR)
 
 clean:
 	rm -rf $(BUILD_DIR)
