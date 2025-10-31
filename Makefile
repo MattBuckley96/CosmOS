@@ -71,7 +71,7 @@ disk: $(IMG_DIR)
 ################################################
 
 run: iso disk
-	qemu-system-i386 -cdrom $(ISO) -m 512 -hda $(IMG)
+	qemu-system-i386 -cdrom $(ISO) -hda $(IMG) -m 512 -monitor stdio
 
 ################################################
 

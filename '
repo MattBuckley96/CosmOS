@@ -55,11 +55,12 @@ void kmain(void)
     {
         panic("ATA Initialization Failed!");
     }
-    printf("\n");
 
     // HACK: reading first allows writes????
     // what bullshit is that
     ata_read(0, NULL, 1);
+
+    u8 w[512];
 
     shell_main();
 

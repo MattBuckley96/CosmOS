@@ -1,4 +1,5 @@
 #include "vga.h"
+#include "string.h"
 
 ///////////////////////////////////////////////
 
@@ -21,6 +22,22 @@ static u16 entry(char c, u8 col)
     return ((u8)c | (attr << 8));
 }
 
+static void scroll(void)
+{
+    memmove(
+        vga.buf,
+        vga.buf + VGA_WIDTH,
+        (VGA_HEIGHT - 1) * VGA_WIDTH * sizeof(u16)
+    );
+
+    for (int i = 0; i < VGA_WIDTH; i++)
+    {
+        vga.buf[(VGA_HEIGHT - 1) * VGA_WIDTH + i] = 0;
+    }
+
+    vga.cy = VGA_HEIGHT - 1;
+}
+
 ///////////////////////////////////////////////
 
 void vga_init(void)
@@ -34,7 +51,7 @@ void vga_clear(void)
 {
     for (u16 i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
     {
-        vga.buf[i] = 0;
+        vga.buf[i] = entry(' ', VGA_BLACK);
     }
 
     vga.cx = 0;
@@ -51,10 +68,12 @@ void vga_putc(char c, u8 col)
         vga.cx = 0;
         vga.cy++;
         break;
+
     case '\b':
         if (vga.cx > 0) vga.cx--;
         vga.buf[index] = entry(' ', VGA_BLACK);
         break;
+
     default:
         vga.buf[index] = entry(c, col);
         vga.cx++;
@@ -65,6 +84,11 @@ void vga_putc(char c, u8 col)
     {
         vga.cx = 0;
         vga.cy++;
+    }
+
+    if (vga.cy >= VGA_HEIGHT)
+    {
+        scroll();
     }
 }
 

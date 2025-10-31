@@ -1,5 +1,6 @@
 #include "ata.h"
 #include "cpu/io.h"
+#include "printf.h"
 
 ///////////////////////////////////////////////
 
@@ -31,6 +32,10 @@
 #define COMMAND_READ     0x20
 #define COMMAND_FLUSH    0xE7
 #define COMMAND_IDENTIFY 0xEC
+#define COMMAND_WRITE    0x30
+
+#define DRIVE_MASTER  0xE0
+#define DRIVE_SLAVE   0xF0
 
 #define SECTOR_SIZE      512
 #define WORDS_PER_SECTOR (SECTOR_SIZE / 2)
@@ -51,40 +56,35 @@ void wait(void)
     while (inb(REG_STATUS) & STATUS_BSY);
 }
 
-void drive_select(u8 drive)
-{
-    outb(REG_DRIVE, 0xA0 | (drive << 4));
-}
-
 ///////////////////////////////////////////////
 
 int ata_init(void)
 {
     int err = ATA_ERR_NONE;
 
+    outb(REG_DRIVE, 0xA0);
+    delay();
     outb(REG_CONTROL, 0);
 
-    drive_select(0);
-    wait();
-
     outb(REG_COMMAND, COMMAND_IDENTIFY);
-    wait();
 
     if (!(inb(REG_STATUS) & STATUS_BSY))
     {
         err = ATA_ERR_NO_DRIVES;
     }
 
+    while (inb(REG_STATUS) & STATUS_BSY);
+    while (!(inb(REG_STATUS) & STATUS_DRQ));
+
     return err;
 }
 
-int ata_read(u32 lba, u8 count, void* out)
+int ata_read(u32 lba, void* out, u8 count)
 {
     int err = ATA_ERR_NONE;
 
-    drive_select(0);
+    outb(REG_DRIVE, DRIVE_MASTER | ((lba >> 24) & 0x0F));
     wait();
-
     while (!(inb(REG_STATUS) & STATUS_RDY));
 
     outb(REG_SECTORS, count);
@@ -92,6 +92,8 @@ int ata_read(u32 lba, u8 count, void* out)
     outb(REG_LBA_MID, (u8)(lba >> 8));
     outb(REG_LBA_HI, (u8)(lba >> 16));
     outb(REG_COMMAND, COMMAND_READ);
+
+    wait();
 
     u16* buf = (u16*)out;
 
@@ -108,4 +110,43 @@ int ata_read(u32 lba, u8 count, void* out)
     }
 
     return err;
+}
+
+int ata_write(u32 lba, void* in, u8 count)
+{
+    u16* buf = (u16*)in;
+
+    outb(REG_DRIVE, DRIVE_MASTER | ((lba >> 24) & 0x0F));
+    wait();
+    while (!(inb(REG_STATUS) & STATUS_RDY));
+
+    outb(REG_SECTORS, count);
+    outb(REG_LBA_LO, (u8)lba);
+    outb(REG_LBA_MID, (u8)(lba >> 8));
+    outb(REG_LBA_HI, (u8)(lba >> 16));
+    outb(REG_COMMAND, COMMAND_WRITE);
+
+    while (inb(REG_STATUS) & STATUS_BSY);
+
+    for (int i = 0; i < count; i++)
+    {
+        while (!(inb(REG_STATUS) & STATUS_DRQ));
+
+        for (int j = 0; j < WORDS_PER_SECTOR; j++)
+        {
+            outw(REG_DATA, buf[j]);
+        }
+        buf += WORDS_PER_SECTOR;
+
+        if (inb(REG_STATUS) & STATUS_ERR)
+            return ATA_ERR_WRITE;
+    }
+
+    outb(REG_COMMAND, COMMAND_FLUSH);
+    while (inb(REG_STATUS) & STATUS_BSY);
+
+    if (inb(REG_STATUS) & STATUS_ERR)
+        return ATA_ERR_WRITE;
+    
+    return ATA_ERR_NONE;
 }
