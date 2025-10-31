@@ -2,6 +2,7 @@
 #include "cpu/idt.h"
 #include "drivers/vga.h"
 #include "drivers/keyboard.h"
+#include "drivers/ata.h"
 #include "printf.h"
 #include "shell/shell.h"
 
@@ -11,6 +12,15 @@ static void klog(const char* msg)
 {
     vga_puts("[ ", VGA_WHITE);
     vga_puts("OK", VGA_LIGHT_GREEN);
+    vga_puts(" ] ", VGA_WHITE);
+    vga_puts(msg, VGA_LIGHT_GRAY);
+    vga_putc('\n', VGA_LIGHT_GRAY);
+}
+
+static void panic(const char* msg)
+{
+    vga_puts("[ ", VGA_WHITE);
+    vga_puts("PANIC", VGA_LIGHT_RED);
     vga_puts(" ] ", VGA_WHITE);
     vga_puts(msg, VGA_LIGHT_GRAY);
     vga_putc('\n', VGA_LIGHT_GRAY);
@@ -39,6 +49,12 @@ void kmain(void)
 
     klog("Initializing Keyboard...");
     keyboard_init();
+
+    klog("Initializing Disk...");
+    if (!ata_init())
+    {
+        panic("ATA Initialization Failed!");
+    }
 
     printf("\n");
 

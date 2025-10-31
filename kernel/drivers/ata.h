@@ -13,6 +13,7 @@ enum
 
 ///////////////////////////////////////////////
 
+int ata_init(void);
 int ata_read(u32 lba, u8 count, void* out);
 int ata_write(u32 lba, u8 count, void* in);
 

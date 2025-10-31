@@ -13,12 +13,6 @@
 
 ///////////////////////////////////////////////
 
-static void shell_clear(int argc, char** argv);
-static void shell_exit(int argc, char** argv);
-static void shell_echo(int argc, char** argv);
-
-///////////////////////////////////////////////
-
 static bool running;
 static char args[MAX_ARGS][BUF_SIZE];
 
@@ -140,12 +134,12 @@ static void execute(int argc, char** argv)
     printf("%s: command not found!\n", argv[0]);
 }
 
-static void shell_clear(int argc, char** argv)
+void shell_clear(int argc, char** argv)
 {
     vga_clear();
 }
 
-static void shell_exit(int argc, char** argv)
+void shell_exit(int argc, char** argv)
 {
     running = false;
 
@@ -153,7 +147,7 @@ static void shell_exit(int argc, char** argv)
     outw(0x604, 0x2000);
 }
 
-static void shell_echo(int argc, char** argv)
+void shell_echo(int argc, char** argv)
 {
     for (int i = 1; i < argc; i++)
     {
