@@ -7,9 +7,10 @@
 
 enum
 {
-    ATA_ERR_NONE = 0,
+    ATA_ERR_NONE      =  0,
     ATA_ERR_NO_DRIVES = -1,
-    ATA_ERR_WRITE = -2,
+    ATA_ERR_WRITE     = -2,
+    ATA_ERR_READ      = -3,
 };
 
 ///////////////////////////////////////////////

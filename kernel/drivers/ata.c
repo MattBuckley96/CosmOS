@@ -60,8 +60,6 @@ void wait(void)
 
 int ata_init(void)
 {
-    int err = ATA_ERR_NONE;
-
     outb(REG_DRIVE, 0xA0);
     delay();
     outb(REG_CONTROL, 0);
@@ -69,20 +67,16 @@ int ata_init(void)
     outb(REG_COMMAND, COMMAND_IDENTIFY);
 
     if (!(inb(REG_STATUS) & STATUS_BSY))
-    {
-        err = ATA_ERR_NO_DRIVES;
-    }
+        return ATA_ERR_NO_DRIVES; 
 
     while (inb(REG_STATUS) & STATUS_BSY);
     while (!(inb(REG_STATUS) & STATUS_DRQ));
 
-    return err;
+    return ATA_ERR_NONE;
 }
 
 int ata_read(u32 lba, void* out, u8 count)
 {
-    int err = ATA_ERR_NONE;
-
     outb(REG_DRIVE, DRIVE_MASTER | ((lba >> 24) & 0x0F));
     wait();
     while (!(inb(REG_STATUS) & STATUS_RDY));
@@ -107,9 +101,13 @@ int ata_read(u32 lba, void* out, u8 count)
         }
 
         buf += WORDS_PER_SECTOR;
+
+        if (!buf)
+            // return no error, just trunc the read
+            return ATA_ERR_NONE;
     }
 
-    return err;
+    return ATA_ERR_NONE;
 }
 
 int ata_write(u32 lba, void* in, u8 count)

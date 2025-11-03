@@ -5,6 +5,7 @@
 #include "drivers/ata.h"
 #include "printf.h"
 #include "shell/shell.h"
+#include "fs/fs.h"
 
 ///////////////////////////////////////////////
 
@@ -51,10 +52,18 @@ void kmain(void)
     keyboard_init();
 
     klog("Initializing Disk...");
-    if (!ata_init())
+    int err = ata_init();
+    if (err)
+        panic("ATA doesnt work idiot");
+
+    klog("Initializing File System...");
+    err = fs_init();
+    if (err)
     {
-        panic("ATA Initialization Failed!");
+        printf("Making file system...\n");
+        shell_mkfs(0, NULL);
     }
+
     printf("\n");
 
     // HACK: reading first allows writes????

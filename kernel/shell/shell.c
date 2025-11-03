@@ -5,6 +5,7 @@
 #include "drivers/vga.h"
 #include "drivers/keyboard.h"
 #include "cpu/io.h"
+#include "fs/fs.h"
 
 ///////////////////////////////////////////////
 
@@ -20,12 +21,16 @@ static char* builtin_commands[] = {
     "clear",
     "exit",
     "echo",
+    "mkfs",
+    "ls",
 };
 
 static void (*builtin_table[])(int argc, char** argv) = {
     shell_clear,
     shell_exit,
     shell_echo,
+    shell_mkfs,
+    shell_ls,
 };
 
 ///////////////////////////////////////////////
@@ -154,6 +159,11 @@ void shell_echo(int argc, char** argv)
         printf("%s ", argv[i]);
     }
     printf("%c", '\n');
+}
+
+void shell_ls(int argc, char** argv)
+{
+    fs_list();
 }
 
 ///////////////////////////////////////////////
