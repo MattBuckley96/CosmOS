@@ -23,6 +23,7 @@ static char* builtin_commands[] = {
     "echo",
     "mkfs",
     "ls",
+    "stat",
 };
 
 static void (*builtin_table[])(int argc, char** argv) = {
@@ -31,6 +32,7 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_echo,
     shell_mkfs,
     shell_ls,
+    shell_stat,
 };
 
 ///////////////////////////////////////////////
@@ -164,6 +166,21 @@ void shell_echo(int argc, char** argv)
 void shell_ls(int argc, char** argv)
 {
     fs_list();
+}
+
+void shell_stat(int argc, char** argv)
+{
+    struct File file;
+
+    int err = file_open(&file, argv[1]);
+    if (err)
+    {
+        printf("stat: file not found!\n");
+        return;
+    }
+
+    printf("size: %i\n", file_get_size(&file));
+    printf("inode: %i\n", file.inode);
 }
 
 ///////////////////////////////////////////////
