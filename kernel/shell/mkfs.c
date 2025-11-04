@@ -6,12 +6,12 @@
 void shell_mkfs(int argc, char** argv)
 {
     struct Superblock sb = {
+        .magic = FS_MAGIC,
         .inodes = 8,
         .free_inodes = 6,
         .blocks = 10,
         .free_blocks = 10,
         .block_size = 512,
-        .magic = 67,
     };
 
     struct Descriptor desc = {
@@ -56,17 +56,17 @@ void shell_mkfs(int argc, char** argv)
     struct Inode inodes[] = {
         (struct Inode) {
             .uid = 1,
-            .blocks = NULL,
+            .blocks = {},
             .size = 0,
         },
         (struct Inode) {
             .uid = 2,
-            .blocks = NULL,
+            .blocks = {},
             .size = 67,
         }
     };
 
-    err = ata_write(desc.inodes_addr, (u8*)&inodes, 1);
+    err = ata_write(desc.inodes_addr, (u8*)inodes, 1);
     if (err)
         return;
 

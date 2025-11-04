@@ -16,7 +16,7 @@ static inline struct Dentry* get_dentry_table(void)
     u32 count = ((sizeof(struct Dentry) * desc.dentries) / 512) + 1;
     u8 buf[count * 512];
 
-    int err = ata_read(desc.dentries_addr, buf, count);
+    int err = ata_read(desc.dentries_addr, &buf, count);
     if (err)
         return NULL;
 
@@ -30,13 +30,21 @@ int fs_init(void)
 {
     u8 buf[512];
 
-    ata_read(2, buf, 1);
+    int err = ata_read(2, buf, 1);
+    if (err)
+        return FS_ERR_INIT;
+
     sb = *(struct Superblock*)buf;
 
     if (sb.magic != FS_MAGIC)
+    {
+        return FS_ERR_INIT;
+    }
+
+    err = ata_read(3, buf, 1);
+    if (err)
         return FS_ERR_INIT;
 
-    ata_read(3, buf, 1);
     desc = *(struct Descriptor*)buf;
 
     return FS_ERR_NONE;
@@ -85,7 +93,7 @@ u32 file_get_size(struct File* file)
 {
     u8 buf[512];
 
-    int err = ata_read(desc.inodes_addr, buf, 1);
+    int err = ata_read(desc.inodes_addr, (u8*)buf, 1);
     if (err)
         return 0;
 

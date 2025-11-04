@@ -5,7 +5,7 @@
 
 ///////////////////////////////////////////////
 
-#define FS_MAGIC 67
+#define FS_MAGIC 0x42
 
 ///////////////////////////////////////////////
 
@@ -31,12 +31,12 @@ enum
 
 struct Superblock
 {
+    u16 magic;
     u32 inodes;
     u32 free_inodes;
     u32 blocks;
     u32 free_blocks;
     u32 block_size;
-    u16 magic;
 } PACKED;
 
 struct Descriptor
@@ -52,7 +52,7 @@ struct Inode
 {
     u16 uid;
     u32 size;
-    u32* blocks[10];
+    u32 blocks[10];
     u8 padding[18];
 } PACKED;
 

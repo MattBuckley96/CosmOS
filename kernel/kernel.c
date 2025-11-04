@@ -12,7 +12,16 @@
 static void klog(const char* msg)
 {
     vga_puts("[ ", VGA_WHITE);
-    vga_puts("OK", VGA_LIGHT_GREEN);
+    vga_puts(" OK ", VGA_LIGHT_GREEN);
+    vga_puts(" ] ", VGA_WHITE);
+    vga_puts(msg, VGA_LIGHT_GRAY);
+    vga_putc('\n', VGA_LIGHT_GRAY);
+}
+
+static void kfail(const char* msg)
+{
+    vga_puts("[ ", VGA_WHITE);
+    vga_puts("FAIL", VGA_LIGHT_RED);
     vga_puts(" ] ", VGA_WHITE);
     vga_puts(msg, VGA_LIGHT_GRAY);
     vga_putc('\n', VGA_LIGHT_GRAY);
@@ -21,7 +30,7 @@ static void klog(const char* msg)
 static void panic(const char* msg)
 {
     vga_puts("[ ", VGA_WHITE);
-    vga_puts("PANIC", VGA_LIGHT_RED);
+    vga_puts("PANIC", VGA_RED);
     vga_puts(" ] ", VGA_WHITE);
     vga_puts(msg, VGA_LIGHT_GRAY);
     vga_putc('\n', VGA_LIGHT_GRAY);
@@ -34,13 +43,24 @@ static void print_splash(void)
     vga_puts("OS\n\n", VGA_LIGHT_YELLOW);
 }
 
+static void pause(int duration)
+{
+    for (int i = 0; i < 1000000; i++)
+        for (int j = 0; j < 100 * duration; j++)
+            asm volatile("nop");
+}
+
 ///////////////////////////////////////////////
 
 void kmain(void)
 {
     vga_init();
     vga_clear();
-    print_splash();
+
+    printf("And then... there was ");
+    // annoying
+    // pause(1);
+    vga_puts("light!\n\n", VGA_WHITE);
 
     klog("Initializing GDT...");
     gdt_init();
@@ -60,15 +80,13 @@ void kmain(void)
     err = fs_init();
     if (err)
     {
-        printf("Making file system...\n");
+        kfail("No file system");
+        klog("Making file system...");
         shell_mkfs(0, NULL);
     }
 
     printf("\n");
-
-    // HACK: reading first allows writes????
-    // what bullshit is that
-    ata_read(0, NULL, 1);
+    print_splash();
 
     shell_main();
 
@@ -76,4 +94,6 @@ void kmain(void)
     {
         asm volatile("hlt");
     }
+
+    panic("How did we get here?");
 }

@@ -66,11 +66,15 @@ int ata_init(void)
 
     outb(REG_COMMAND, COMMAND_IDENTIFY);
 
-    if (!(inb(REG_STATUS) & STATUS_BSY))
+    if (!(inb(REG_STATUS)))
         return ATA_ERR_NO_DRIVES; 
 
     while (inb(REG_STATUS) & STATUS_BSY);
     while (!(inb(REG_STATUS) & STATUS_DRQ));
+
+    // HACK: reading first allows writes????
+    // what bullshit is that
+    ata_read(0, NULL, 1);
 
     return ATA_ERR_NONE;
 }
