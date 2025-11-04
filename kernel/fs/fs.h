@@ -18,7 +18,13 @@ enum
 enum
 {
     FS_FILE = 1,
-    FS_DIR = 2
+    FS_DIR  = 2
+};
+
+enum
+{
+    FILE_ERR_NONE =  0,
+    FILE_ERR_OPEN = -1,
 };
 
 ///////////////////////////////////////////////
@@ -38,8 +44,8 @@ struct Descriptor
     u32 block_bitmap_addr;
     u32 inode_bitmap_addr;
     u32 inodes_addr;
-    u16 dirs;
-    u32 dirs_addr;
+    u16 dentries;
+    u32 dentries_addr;
 } PACKED;
 
 struct Inode
@@ -52,17 +58,24 @@ struct Inode
 
 struct Dentry
 {
-    u8  name[256];
+    char name[256];
     u8  name_len;
     u16 inode;
     u8  type;
 } PACKED;
 
+struct File
+{
+    u16 inode;
+};
+
 ///////////////////////////////////////////////
 
 int fs_init(void);
 void fs_list(void);
-u32 fs_get_size(u32 uid);
+
+int file_open(struct File* file, const char* path);
+u32 file_get_size(struct File* file);
 
 ///////////////////////////////////////////////
 

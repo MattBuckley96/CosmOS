@@ -2,11 +2,27 @@
 #include "drivers/ata.h"
 #include "drivers/vga.h"
 #include "printf.h"
+#include "string.h"
 
 ///////////////////////////////////////////////
 
 static struct Superblock sb;
 static struct Descriptor desc;
+
+///////////////////////////////////////////////
+
+static inline struct Dentry* get_dentry_table(void)
+{
+    u32 count = ((sizeof(struct Dentry) * desc.dentries) / 512) + 1;
+    u8 buf[count * 512];
+
+    int err = ata_read(desc.dentries_addr, buf, count);
+    if (err)
+        return NULL;
+
+    struct Dentry* dentry = (struct Dentry*)buf;
+    return dentry;
+}
 
 ///////////////////////////////////////////////
 
@@ -28,16 +44,9 @@ int fs_init(void)
 
 void fs_list(void)
 {
-    u8 buf[512];
+    struct Dentry* dentry = get_dentry_table();
 
-    u32 count = ((sizeof(struct Dentry) * desc.dirs) / 512) + 1;
-    u8 dentry_buf[count * 512];
-
-    ata_read(desc.dirs_addr, dentry_buf, count);
-
-    struct Dentry* dentry = (struct Dentry*)dentry_buf;
-
-    for (int i = 0; i < desc.dirs; i++)
+    for (int i = 0; i < desc.dentries; i++)
     {
         u8 col = VGA_LIGHT_GRAY;
 
@@ -54,7 +63,25 @@ void fs_list(void)
     }
 }
 
-u32 fs_get_size(u32 uid)
+///////////////////////////////////////////////
+
+int file_open(struct File* file, const char* path)
+{
+    struct Dentry* dentry = get_dentry_table();
+
+    for (int i = 0; i < desc.dentries; i++)
+    {
+        if (strcmp(path, dentry[i].name) == 0)
+        {
+            file->inode = dentry[i].inode;
+            return FILE_ERR_NONE;
+        }
+    }
+
+    return FILE_ERR_OPEN;
+}
+
+u32 file_get_size(struct File* file)
 {
     u8 buf[512];
 
@@ -62,18 +89,7 @@ u32 fs_get_size(u32 uid)
     if (err)
         return 0;
 
-    struct Inode* inode = (struct Inode*)buf;
+    struct Inode* inodes = (struct Inode*)buf;
 
-    for (int i = 0; i < sb.inodes; i++)
-    {
-        if (inode->uid != uid)
-        {
-            inode++;
-            continue;
-        }
-
-        return inode->size;
-    }
-
-    return 0;
+    return inodes[file->inode - 1].size;
 }

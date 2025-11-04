@@ -17,8 +17,8 @@ void shell_mkfs(int argc, char** argv)
     struct Descriptor desc = {
         .inode_bitmap_addr = 0,
         .block_bitmap_addr = 0,
-        .dirs = 2,
-        .dirs_addr = 4,
+        .dentries = 2,
+        .dentries_addr = 4,
 
         // hard coded for now
         .inodes_addr = 10
@@ -49,7 +49,7 @@ void shell_mkfs(int argc, char** argv)
 
     u32 count = (sizeof(root) / 512) + 1;
 
-    err = ata_write(desc.dirs_addr, (u8*)root, count);
+    err = ata_write(desc.dentries_addr, (u8*)root, count);
     if (err)
         return;
 
