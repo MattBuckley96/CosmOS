@@ -5,7 +5,7 @@ A small OS that I am creating for fun and to learn more about them
 ## Features
 * VGA text mode printing
 * Keyboard input
-* Custom File System (Constellation)
+* Custom File System (OrionFS)
 * Simple shell with unix-like commands
     - clear
     - exit
