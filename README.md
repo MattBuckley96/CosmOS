@@ -5,10 +5,14 @@ A small OS that I am creating for fun and to learn more about them
 ## Features
 * VGA text mode printing
 * Keyboard input
-* Simple shell with built in commands
+* Custom File System (Constellation)
+* Simple shell with unix-like commands
     - clear
     - exit
     - echo
+    - mkfs
+    - ls
+    - stat
 
 ## Quick Start
 To build kernel.iso use the following command:
