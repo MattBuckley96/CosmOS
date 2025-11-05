@@ -70,6 +70,7 @@ struct File
 
 int fs_init(void);
 void fs_list(void);
+int get_inode(u32 inode, struct Inode* out);
 
 int file_open(struct File* file, const char* path);
 u32 file_get_size(struct File* file);

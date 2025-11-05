@@ -11,25 +11,6 @@ static struct Descriptor desc;
 
 ///////////////////////////////////////////////
 
-static int get_inode(u32 inode, struct Inode* out)
-{
-    u8 buf[512];
-
-    u32 inodes_per_block = (sb.block_size / sizeof(struct Inode));
-    u32 block = (inode - 1) / inodes_per_block;
-
-    int err = ata_read(desc.inodes_addr + block, buf, 1);
-    if (err)
-        return -1;
-
-    u32 index = (inode - 1) % inodes_per_block;
-
-    struct Inode* inodes = (struct Inode*)buf;
-
-    *out = inodes[index];
-    return 0;
-}
-
 // HACK: 
 // need to calculate block count, then traverse, 
 // since they might be fragmented
@@ -103,6 +84,26 @@ void fs_list(void)
         printf("\n");
     }
 }
+
+int get_inode(u32 inode, struct Inode* out)
+{
+    u8 buf[512];
+
+    u32 inodes_per_block = (sb.block_size / sizeof(struct Inode));
+    u32 block = (inode - 1) / inodes_per_block;
+
+    int err = ata_read(desc.inodes_addr + block, buf, 1);
+    if (err)
+        return -1;
+
+    u32 index = (inode - 1) % inodes_per_block;
+
+    struct Inode* inodes = (struct Inode*)buf;
+
+    *out = inodes[index];
+    return 0;
+}
+
 
 ///////////////////////////////////////////////
 

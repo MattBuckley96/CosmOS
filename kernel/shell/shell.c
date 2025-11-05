@@ -179,8 +179,23 @@ void shell_stat(int argc, char** argv)
         return;
     }
 
-    printf("size: %i\n", file_get_size(&file));
+    struct Inode inode;
+    get_inode(file.inode, &inode);
+
     printf("inode: %i\n", file.inode);
+    printf("size: %i\n", inode.size);
+    printf("type: ");
+
+    switch (inode.type)
+    {
+    case (FS_FILE):
+        printf("file\n");
+        break;
+
+    case (FS_DIR):
+        printf("directory\n");
+        break;
+    }
 }
 
 ///////////////////////////////////////////////
