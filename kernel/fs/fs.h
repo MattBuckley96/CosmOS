@@ -41,11 +41,8 @@ struct Superblock
 
 struct Descriptor
 {
-    u32 block_bitmap_addr;
-    u32 inode_bitmap_addr;
     u32 inodes_addr;
-    u16 dentries;
-    u32 dentries_addr;
+    u32 blocks_addr;
 } PACKED;
 
 struct Inode
@@ -53,7 +50,8 @@ struct Inode
     u16 uid;
     u32 size;
     u32 blocks[10];
-    u8 padding[18];
+    u8  type;
+    u8  padding[17];
 } PACKED;
 
 struct Dentry
