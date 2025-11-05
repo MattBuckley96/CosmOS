@@ -1,11 +1,11 @@
-# CosmOS
+ # CosmOS
 
 A small OS that I am creating for fun and to learn more about them
 
 ## Features
 * VGA text mode printing
 * Keyboard input
-* Custom File System (OrionFS)
+* Custom File System (Orion)
 * Simple shell with unix-like commands
     - clear
     - exit
