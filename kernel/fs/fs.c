@@ -11,18 +11,18 @@ static struct Descriptor desc;
 
 ///////////////////////////////////////////////
 
-static int get_inode(u32 uid, struct Inode* out)
+static int get_inode(u32 inode, struct Inode* out)
 {
     u8 buf[512];
 
     u32 inodes_per_block = (sb.block_size / sizeof(struct Inode));
-    u32 block = (uid - 1) / inodes_per_block;
+    u32 block = (inode - 1) / inodes_per_block;
 
     int err = ata_read(desc.inodes_addr + block, buf, 1);
     if (err)
         return -1;
 
-    u32 index = (uid - 1) % inodes_per_block;
+    u32 index = (inode - 1) % inodes_per_block;
 
     struct Inode* inodes = (struct Inode*)buf;
 
@@ -132,13 +132,8 @@ int file_open(struct File* file, const char* path)
 
 u32 file_get_size(struct File* file)
 {
-    u8 buf[512];
+    struct Inode inode;
+    get_inode(file->inode, &inode);
 
-    int err = ata_read(desc.inodes_addr, (u8*)buf, 1);
-    if (err)
-        return 0;
-
-    struct Inode* inodes = (struct Inode*)buf;
-
-    return inodes[file->inode - 1].size;
+    return inode.size;
 }

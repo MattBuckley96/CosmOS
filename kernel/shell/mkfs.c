@@ -22,19 +22,16 @@ void shell_mkfs(int argc, char** argv)
 
     struct Inode inodes[] = {
         (struct Inode) {
-            .uid = 1,
             .size = sizeof(struct Dentry) * 2,
             .type = FS_DIR,
             .blocks = { 1, 2, 0, 0, 0, 0, 0, 0, 0, 0 }
         },
         (struct Inode) {
-            .uid = 2,
             .size = 0,
             .type = FS_DIR,
             .blocks = {}
         },
         (struct Inode) {
-            .uid = 3,
             .size = 67,
             .type = FS_FILE,
             .blocks = {}

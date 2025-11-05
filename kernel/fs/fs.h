@@ -47,11 +47,10 @@ struct Descriptor
 
 struct Inode
 {
-    u16 uid;
     u32 size;
     u32 blocks[10];
     u8  type;
-    u8  padding[17];
+    u8  padding[19];
 } PACKED;
 
 struct Dentry
