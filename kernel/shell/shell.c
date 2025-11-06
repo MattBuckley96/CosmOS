@@ -165,6 +165,18 @@ void shell_echo(int argc, char** argv)
     printf("%c", '\n');
 }
 
+void shell_mkfs(int argc, char** argv)
+{
+    int err = fs_create();
+    if (err)
+    {
+        printf("mkfs: error creating file system!\n");
+        return;
+    }
+
+    printf("%s: successfully created file system!\n", argv[0]);
+}
+
 void shell_ls(int argc, char** argv)
 {
     fs_list();

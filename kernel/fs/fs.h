@@ -11,8 +11,9 @@
 
 enum
 {
-    FS_ERR_NONE =  0,
-    FS_ERR_INIT = -1,
+    FS_ERR_NONE   =  0,
+    FS_ERR_INIT   = -1,
+    FS_ERR_CREATE = -2,
 };
 
 enum
@@ -69,6 +70,7 @@ struct File
 
 ///////////////////////////////////////////////
 
+int fs_create(void);
 int fs_init(void);
 void fs_list(void);
 

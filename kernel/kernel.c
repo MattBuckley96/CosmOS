@@ -82,7 +82,7 @@ void kmain(void)
     {
         kfail("No file system");
         klog("Making file system...");
-        shell_mkfs(0, NULL);
+        fs_create();
     }
 
     printf("\n");
