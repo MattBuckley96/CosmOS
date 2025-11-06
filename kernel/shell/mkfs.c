@@ -11,7 +11,7 @@ void shell_mkfs(int argc, char** argv)
         .inodes = 4096,
         .free_inodes = 4094,
         .blocks = 4096,
-        .free_blocks = 4095,
+        .free_blocks = 4094,
         .block_size = 512,
     };
 
@@ -34,7 +34,7 @@ void shell_mkfs(int argc, char** argv)
         (struct Inode) {
             .size = 67,
             .type = FS_FILE,
-            .blocks = {}
+            .blocks = { 3, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
         }
     };
 
@@ -78,6 +78,15 @@ void shell_mkfs(int argc, char** argv)
     memcpy(entries_buf, &root_entries, 1024); 
 
     err = ata_write(desc.blocks_addr, entries_buf, 2);
+    if (err)
+        return;
+
+    u8 test_buf[512];
+    memcpy(test_buf, "hello from test", 16);
+
+    u32 block = inodes[2].blocks[0] - 1;
+
+    err = ata_write(desc.blocks_addr + block, test_buf, 1);
     if (err)
         return;
 

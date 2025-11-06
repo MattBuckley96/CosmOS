@@ -25,6 +25,7 @@ enum
 {
     FILE_ERR_NONE =  0,
     FILE_ERR_OPEN = -1,
+    FILE_ERR_READ = -2,
 };
 
 ///////////////////////////////////////////////
@@ -70,10 +71,13 @@ struct File
 
 int fs_init(void);
 void fs_list(void);
+
 int get_inode(u32 inode, struct Inode* out);
+u32 block_count(struct Inode* inode);
 
 int file_open(struct File* file, const char* path);
 u32 file_get_size(struct File* file);
+int file_read(struct File* file, void* out);
 
 ///////////////////////////////////////////////
 

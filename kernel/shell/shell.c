@@ -24,6 +24,7 @@ static char* builtin_commands[] = {
     "mkfs",
     "ls",
     "stat",
+    "cat",
 };
 
 static void (*builtin_table[])(int argc, char** argv) = {
@@ -33,6 +34,7 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_mkfs,
     shell_ls,
     shell_stat,
+    shell_cat,
 };
 
 ///////////////////////////////////////////////
@@ -175,7 +177,7 @@ void shell_stat(int argc, char** argv)
     int err = file_open(&file, argv[1]);
     if (err)
     {
-        printf("stat: file not found!\n");
+        printf("stat: %s: file not found!\n", argv[1]);
         return;
     }
 
@@ -196,6 +198,47 @@ void shell_stat(int argc, char** argv)
         printf("directory\n");
         break;
     }
+
+    u32 blocks = block_count(&inode);
+    printf("blocks: %i\n", blocks);
+}
+
+void shell_cat(int argc, char** argv)
+{
+    struct File file;
+
+    int err = file_open(&file, argv[1]);
+    if (err)
+    {
+        printf("cat: %s: file not found!\n", argv[1]);
+        return;
+    }
+
+    struct Inode inode;
+    err = get_inode(file.inode, &inode);
+    if (err)
+    {
+        printf("cat: couldn't load inode!\n");
+        return;
+    }
+
+    if (inode.type == FS_DIR)
+    {
+        printf("cat: %s: is a directory.\n", argv[1]);
+        return;
+    }
+
+    // NOTE: hardcoded for now;
+    char buf[8192] = {};
+
+    err = file_read(&file, buf);
+    if (err)
+    {
+        printf("%s told me to tell you it couldnt read...", argv[1]);
+        return;
+    }
+
+    printf("%s\n", buf);
 }
 
 ///////////////////////////////////////////////

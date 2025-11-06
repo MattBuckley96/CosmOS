@@ -11,22 +11,26 @@ static struct Descriptor desc;
 
 ///////////////////////////////////////////////
 
-// HACK: 
-// need to calculate block count, then traverse, 
-// since they might be fragmented
-static struct Dentry* get_dentry_table(struct Inode* inode)
+static inline struct Dentry* get_dentry_table(struct Inode* inode)
 {
-    if (inode->type != FS_DIR)
-        return NULL;
+    u32 blocks = block_count(inode);
+    u8 buf[blocks * 512];
+    u8* offset = (u8*)buf;
 
-    int addr = desc.blocks_addr + (inode->blocks[0] - 1);
-    int sectors = (inode->size / 512) + 1;
+    // read all blocks into buffer
+    for (int i = 0; i < 10; i++)
+    {
+        if (inode->blocks[i] == 0)
+            continue;
+        
+        u32 block = inode->blocks[i] - 1;
 
-    u8 buf[sectors * 512];
+        int err = ata_read(desc.blocks_addr + block, offset, 1);
+        if (err)
+            return NULL;
 
-    int err = ata_read(addr, buf, sectors);
-    if (err)
-        return NULL;
+        offset += 512;
+    }
 
     struct Dentry* dentry = (struct Dentry*)buf;
     return dentry;
@@ -85,6 +89,8 @@ void fs_list(void)
     }
 }
 
+///////////////////////////////////////////////
+
 int get_inode(u32 inode, struct Inode* out)
 {
     u8 buf[512];
@@ -104,6 +110,19 @@ int get_inode(u32 inode, struct Inode* out)
     return 0;
 }
 
+u32 block_count(struct Inode* inode)
+{
+    u32 count = 0;
+
+    // NOTE: only have 10 blocks for now, hardcoded
+    for (int i = 0; i < 10; i++)
+    {
+        if (inode->blocks[i] > 0)
+            count++;
+    }
+
+    return count;
+}
 
 ///////////////////////////////////////////////
 
@@ -137,4 +156,34 @@ u32 file_get_size(struct File* file)
     get_inode(file->inode, &inode);
 
     return inode.size;
+}
+
+int file_read(struct File* file, void* out)
+{
+    struct Inode inode;
+
+    int err = get_inode(file->inode, &inode);
+    if (err)
+        return FILE_ERR_READ;
+
+    u32 blocks = block_count(&inode);
+    u8 buf[512];
+    u8* out_buf = (u8*)out;
+
+    // NOTE: still hardcoded
+    for (int i = 0; i < 10; i++)
+    {
+        if (inode.blocks[i] == 0)
+            continue;
+
+        u32 block = inode.blocks[i] - 1;
+        err = ata_read(desc.blocks_addr + block, buf, 1);
+        if (err)
+            return FILE_ERR_READ;
+
+        memcpy(out_buf, buf, 512);
+        out_buf += 512;
+    }
+
+    return FILE_ERR_NONE;
 }
