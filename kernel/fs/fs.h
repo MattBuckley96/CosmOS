@@ -29,6 +29,13 @@ enum
     FILE_ERR_READ = -2,
 };
 
+enum
+{
+    DIR_ERR_NONE  =  0,
+    DIR_ERR_OPEN  = -1,
+    DIR_ERR_ENTER = -2,
+};
+
 ///////////////////////////////////////////////
 
 struct Superblock
@@ -68,16 +75,23 @@ struct File
     u16 inode;
 };
 
+struct Dir
+{
+    u16 inode;
+};
+
 ///////////////////////////////////////////////
 
 int fs_create(void);
 int fs_init(void);
-void fs_list(void);
+
+int dir_open(struct Dir* dir, const char* path);
+void dir_list(struct Dir* dir);
 
 int get_inode(u32 inode, struct Inode* out);
 u32 block_count(struct Inode* inode);
 
-int file_open(struct File* file, const char* path);
+int file_open(struct File* file, struct Dir* dir, const char* path);
 u32 file_get_size(struct File* file);
 int file_read(struct File* file, void* out);
 

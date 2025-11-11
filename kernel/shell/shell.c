@@ -16,6 +16,7 @@
 
 static bool running;
 static char args[MAX_ARGS][BUF_SIZE];
+static struct Dir dir;
 
 static char* builtin_commands[] = {
     "clear",
@@ -25,6 +26,7 @@ static char* builtin_commands[] = {
     "ls",
     "stat",
     "cat",
+    "cd",
 };
 
 static void (*builtin_table[])(int argc, char** argv) = {
@@ -35,6 +37,7 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_ls,
     shell_stat,
     shell_cat,
+    shell_cd,
 };
 
 ///////////////////////////////////////////////
@@ -179,14 +182,14 @@ void shell_mkfs(int argc, char** argv)
 
 void shell_ls(int argc, char** argv)
 {
-    fs_list();
+    dir_list(&dir);
 }
 
 void shell_stat(int argc, char** argv)
 {
     struct File file;
 
-    int err = file_open(&file, argv[1]);
+    int err = file_open(&file, &dir, argv[1]);
     if (err)
     {
         printf("stat: %s: file not found!\n", argv[1]);
@@ -219,7 +222,7 @@ void shell_cat(int argc, char** argv)
 {
     struct File file;
 
-    int err = file_open(&file, argv[1]);
+    int err = file_open(&file, &dir, argv[1]);
     if (err)
     {
         printf("cat: %s: file not found!\n", argv[1]);
@@ -253,11 +256,28 @@ void shell_cat(int argc, char** argv)
     printf("%s\n", buf);
 }
 
+void shell_cd(int argc, char** argv)
+{
+    if (argc < 2)
+    {
+        dir.inode = 1;
+        return;
+    }
+
+    int err = dir_open(&dir, argv[1]);
+    if (err)
+        printf("%s: %s: couldnt find directory!\n", argv[0], argv[1]);
+}
+
 ///////////////////////////////////////////////
 
 void shell_main(void)
 {
     running = true;
+
+    dir = (struct Dir) {
+        .inode = 1
+    };
 
     while (running)
     {

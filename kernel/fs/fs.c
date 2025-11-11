@@ -62,17 +62,32 @@ int fs_init(void)
     return FS_ERR_NONE;
 }
 
-void fs_list(void)
-{
-    struct Inode root;
+///////////////////////////////////////////////
 
-    int err = get_inode(1, &root);
+int dir_open(struct Dir* dir, const char* path)
+{
+    struct File* file = (struct File*)dir;
+
+    int err = file_open(file, dir, path);
+    if (err)
+        return err;
+
+    return DIR_ERR_NONE;
+}
+
+void dir_list(struct Dir* dir)
+{
+    struct Inode inode;
+
+    int err = get_inode(dir->inode, &inode);
     if (err)
         return;
 
-    struct Dentry* dentry = get_dentry_table(&root);
+    struct Dentry* dentry = get_dentry_table(&inode);
+    if (!dentry)
+        return;
 
-    int count = (root.size / sizeof(struct Dentry));
+    int count = (inode.size / sizeof(struct Dentry));
 
     for (int i = 0; i < count; i++)
     {
@@ -126,17 +141,16 @@ u32 block_count(struct Inode* inode)
 
 ///////////////////////////////////////////////
 
-int file_open(struct File* file, const char* path)
+int file_open(struct File* file, struct Dir* dir, const char* path)
 {
-    struct Inode root;
+    struct Inode inode;
 
-    int err = get_inode(1, &root);
+    int err = get_inode(dir->inode, &inode);
     if (err)
-        return FILE_ERR_OPEN;
+        return err;
 
-    struct Dentry* dentry = get_dentry_table(&root);
-
-    int count = (root.size / sizeof(struct Dentry));
+    struct Dentry* dentry = get_dentry_table(&inode);
+    int count = (inode.size / sizeof(struct Dentry));
 
     for (int i = 0; i < count; i++)
     {
@@ -193,9 +207,9 @@ int fs_create(void)
     sb = (struct Superblock) {
         .magic = FS_MAGIC,
         .inodes = 4096,
-        .free_inodes = 4094,
+        .free_inodes = 4090,
         .blocks = 4096,
-        .free_blocks = 4094,
+        .free_blocks = 4090,
         .block_size = 512,
     };
 
@@ -211,14 +225,19 @@ int fs_create(void)
             .blocks = { 1, 2, 0, 0, 0, 0, 0, 0, 0, 0 }
         },
         (struct Inode) {
-            .size = 0,
+            .size = sizeof(struct Dentry) * 3,
             .type = FS_DIR,
-            .blocks = {}
+            .blocks = { 3, 4, 0, 0, 0, 0, 0, 0, 0, 0 }
         },
         (struct Inode) {
             .size = 16,
             .type = FS_FILE,
-            .blocks = { 3, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+            .blocks = { 5, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+        },
+        (struct Inode) {
+            .size = 16,
+            .type = FS_FILE,
+            .blocks = { 6, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
         }
     };
 
@@ -235,6 +254,27 @@ int fs_create(void)
             .inode = 3,
             .type = FS_FILE 
         },
+    };
+
+    struct Dentry dir_entries[] = {
+        (struct Dentry) {
+            .name = ".",
+            .name_len = 1,
+            .inode = 2,
+            .type = FS_DIR
+        },
+        (struct Dentry) {
+            .name = "..",
+            .name_len = 2,
+            .inode = 1,
+            .type = FS_DIR
+        },
+        (struct Dentry) {
+            .name = "deep.txt",
+            .name_len = 8,
+            .inode = 4,
+            .type = FS_FILE
+        }
     };
 
     // memcpy so that junk is not written to disk
@@ -258,19 +298,29 @@ int fs_create(void)
         return FS_ERR_CREATE;
 
     // HACK: this shit is so scuffed but it works for now
-    u8 entries_buf[1024];
+    u8 entries_buf[512 * 4];
     memcpy(entries_buf, &root_entries, 1024); 
+    memcpy(entries_buf + 1024, &dir_entries, 1024);
 
-    err = ata_write(desc.blocks_addr, entries_buf, 2);
+    err = ata_write(desc.blocks_addr, entries_buf, 4);
     if (err)
         return FS_ERR_CREATE;
 
-    u8 test_buf[512];
-    memcpy(test_buf, "hello from test", inodes[2].size);
+    // test.txt
+    memcpy(buf, "hello from test", inodes[2].size);
 
     u32 block = inodes[2].blocks[0] - 1;
 
-    err = ata_write(desc.blocks_addr + block, test_buf, 1);
+    err = ata_write(desc.blocks_addr + block, buf, 1);
+    if (err)
+        return FS_ERR_CREATE;
+
+    // deep.txt
+    memcpy(buf, "hello from deep", inodes[3].size);
+
+    block = inodes[3].blocks[0] - 1;
+
+    err = ata_write(desc.blocks_addr + block, buf, 1);
     if (err)
         return FS_ERR_CREATE;
 
