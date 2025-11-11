@@ -13,6 +13,8 @@ A small OS that I am creating for fun and to learn more about them
     - mkfs
     - ls
     - stat
+    - cat
+    - cd
 
 ## Quick Start
 To build kernel.iso use the following command:
