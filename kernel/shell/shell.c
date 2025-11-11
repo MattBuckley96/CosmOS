@@ -46,7 +46,13 @@ static void prompt(void)
 {
     vga_puts("Cosm", VGA_LIGHT_MAGENTA);
     vga_puts("OS", VGA_LIGHT_YELLOW);
-    vga_puts(":", VGA_LIGHT_CYAN);
+    vga_puts(":", VGA_WHITE);
+    vga_puts("/", VGA_LIGHT_CYAN);
+
+    char* name = dir_name(&dir);
+    if (name)
+        vga_puts(name, VGA_LIGHT_CYAN);
+
     vga_puts("$ ", VGA_WHITE);
 }
 
@@ -266,7 +272,10 @@ void shell_cd(int argc, char** argv)
 
     int err = dir_open(&dir, argv[1]);
     if (err)
+    {
         printf("%s: %s: couldnt find directory!\n", argv[0], argv[1]);
+        return;
+    }
 }
 
 ///////////////////////////////////////////////

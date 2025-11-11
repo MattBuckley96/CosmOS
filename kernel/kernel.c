@@ -9,6 +9,21 @@
 
 ///////////////////////////////////////////////
 
+static void test(void)
+{
+    struct File file;
+
+    int err = file_open(&file, &(struct Dir){ 1 }, "test.txt");
+    if (err)
+        return;
+
+    char buf[512] = "WRITE!!!";
+
+    err = file_write(&file, buf, 1);
+    if (err)
+        return;
+}
+
 static void klog(const char* msg)
 {
     vga_puts("[ ", VGA_WHITE);
@@ -87,6 +102,8 @@ void kmain(void)
 
     printf("\n");
     print_splash();
+
+    test();
 
     shell_main();
 

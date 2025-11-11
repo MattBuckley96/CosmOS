@@ -18,22 +18,29 @@ enum
 
 enum
 {
+    FS_STATE_CLEAN =  1,
+    FS_STATE_DIRTY =  2,
+};
+
+enum
+{
     FS_FILE = 1,
     FS_DIR  = 2
 };
 
 enum
 {
-    FILE_ERR_NONE =  0,
-    FILE_ERR_OPEN = -1,
-    FILE_ERR_READ = -2,
+    FILE_ERR_NONE   =  0,
+    FILE_ERR_OPEN   = -1,
+    FILE_ERR_READ   = -2,
+    FILE_ERR_WRITE  = -3,
+    FILE_ERR_CREATE = -4,
 };
 
 enum
 {
-    DIR_ERR_NONE  =  0,
-    DIR_ERR_OPEN  = -1,
-    DIR_ERR_ENTER = -2,
+    DIR_ERR_NONE   =  0,
+    DIR_ERR_OPEN   = -1,
 };
 
 ///////////////////////////////////////////////
@@ -46,6 +53,7 @@ struct Superblock
     u32 blocks;
     u32 free_blocks;
     u32 block_size;
+    u8  state;
 } PACKED;
 
 struct Descriptor
@@ -84,16 +92,19 @@ struct Dir
 
 int fs_create(void);
 int fs_init(void);
-
-int dir_open(struct Dir* dir, const char* path);
-void dir_list(struct Dir* dir);
+int fs_sync(void);
 
 int get_inode(u32 inode, struct Inode* out);
 u32 block_count(struct Inode* inode);
 
+int dir_open(struct Dir* dir, const char* path);
+void dir_list(struct Dir* dir);
+char* dir_name(struct Dir* dir);
+
 int file_open(struct File* file, struct Dir* dir, const char* path);
 u32 file_get_size(struct File* file);
 int file_read(struct File* file, void* out);
+int file_write(struct File* file, void* in, u32 count);
 
 ///////////////////////////////////////////////
 
