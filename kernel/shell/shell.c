@@ -167,11 +167,45 @@ void shell_exit(int argc, char** argv)
 
 void shell_echo(int argc, char** argv)
 {
+    char buf[512];
+    int pos = 0;
+
     for (int i = 1; i < argc; i++)
     {
-        printf("%s ", argv[i]);
+        if (strcmp(argv[i], ">") == 0)
+        {
+            i++;
+            char* path = argv[i++];
+
+            struct File file;
+
+            int err = file_open(&file, &dir, path);
+            if (err)
+            {
+                printf("%s: %s: could not find file\n", argv[0], path);
+                return;
+            }
+
+            err = file_write(&file, buf, 1);
+            if (err)
+            {
+                printf("%s: %s: cannot write to file\n", argv[0], path);
+            }
+
+            return;
+        }
+        else
+        {
+            while (*argv[i])
+            {
+                buf[pos++] = *argv[i]++;
+            }
+            buf[pos++] = ' ';
+        }
     }
-    printf("%c", '\n');
+
+    buf[pos] = '\0';
+    printf("%s\n", buf);
 }
 
 void shell_mkfs(int argc, char** argv)
