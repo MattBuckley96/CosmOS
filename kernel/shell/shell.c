@@ -27,6 +27,7 @@ static char* builtin_commands[] = {
     "stat",
     "cat",
     "cd",
+    "help",
 };
 
 static void (*builtin_table[])(int argc, char** argv) = {
@@ -38,7 +39,10 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_stat,
     shell_cat,
     shell_cd,
+    shell_help,
 };
+
+#define BUILTIN_SIZE (sizeof(builtin_commands) / sizeof(char*))
 
 ///////////////////////////////////////////////
 
@@ -138,9 +142,7 @@ static void execute(int argc, char** argv)
         return;
     }
 
-    int size = sizeof(builtin_commands) / sizeof(char*);
-
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < BUILTIN_SIZE; i++)
     {
         if (strcmp(argv[0], builtin_commands[i]) == 0)
         {
@@ -309,6 +311,16 @@ void shell_cd(int argc, char** argv)
     {
         printf("%s: %s: couldnt find directory!\n", argv[0], argv[1]);
         return;
+    }
+}
+
+void shell_help(int argc, char** argv)
+{
+    printf("Available commands (%i):\n\n", BUILTIN_SIZE);
+
+    for (int i = 0; i < BUILTIN_SIZE; i++)
+    {
+        printf("%s\n", builtin_commands[i]);
     }
 }
 
