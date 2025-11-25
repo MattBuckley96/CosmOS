@@ -27,6 +27,7 @@ static char* builtin_commands[] = {
     "stat",
     "cat",
     "cd",
+    "fsinfo",
     "help",
 };
 
@@ -39,6 +40,7 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_stat,
     shell_cat,
     shell_cd,
+    shell_fsinfo,
     shell_help,
 };
 
@@ -239,7 +241,7 @@ void shell_stat(int argc, char** argv)
     }
 
     struct Inode inode;
-    get_inode(file.inode, &inode);
+    inode_get(file.inode, &inode);
 
     printf("inode: %i\n", file.inode);
     printf("size: %i\n", inode.size);
@@ -256,7 +258,7 @@ void shell_stat(int argc, char** argv)
         break;
     }
 
-    u32 blocks = block_count(&inode);
+    u32 blocks = inode_block_count(&inode);
     printf("blocks: %i\n", blocks);
 }
 
@@ -272,7 +274,7 @@ void shell_cat(int argc, char** argv)
     }
 
     struct Inode inode;
-    err = get_inode(file.inode, &inode);
+    err = inode_get(file.inode, &inode);
     if (err)
     {
         printf("cat: couldn't load inode!\n");
@@ -312,6 +314,24 @@ void shell_cd(int argc, char** argv)
         printf("%s: %s: couldnt find directory!\n", argv[0], argv[1]);
         return;
     }
+}
+
+void shell_fsinfo(int argc, char** argv)
+{
+    printf("Superblock:\n");    
+    printf("magic: %i\n", sb.magic);
+    printf("inodes: %i\n", sb.inodes);
+    printf("free_inodes: %i\n", sb.free_inodes);
+    printf("blocks: %i\n", sb.blocks);
+    printf("free_blocks: %i\n", sb.free_blocks);
+    printf("block_size: %i\n", sb.block_size);
+    printf("state: %i\n", sb.state);
+
+    printf("\nDescriptor:\n");
+    printf("inode_bitmap_addr: %i\n", desc.inode_bitmap_addr);
+    printf("block_bitmap_addr: %i\n", desc.block_bitmap_addr);
+    printf("inodes_addr: %i\n", desc.inodes_addr);
+    printf("blocks_addr: %i\n", desc.blocks_addr);
 }
 
 void shell_help(int argc, char** argv)

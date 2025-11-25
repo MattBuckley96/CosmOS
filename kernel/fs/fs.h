@@ -7,6 +7,10 @@
 
 #define FS_MAGIC 0x42
 
+#define MAX_BLOCKS  (8 * 512)
+#define MAX_INODES  (8 * 512)
+#define BITMAP_SIZE (8 * 512)
+
 ///////////////////////////////////////////////
 
 enum
@@ -30,15 +34,6 @@ enum
 
 enum
 {
-    FILE_ERR_NONE   =  0,
-    FILE_ERR_OPEN   = -1,
-    FILE_ERR_READ   = -2,
-    FILE_ERR_WRITE  = -3,
-    FILE_ERR_CREATE = -4,
-};
-
-enum
-{
     DIR_ERR_NONE   =  0,
     DIR_ERR_OPEN   = -1,
 };
@@ -58,6 +53,8 @@ struct Superblock
 
 struct Descriptor
 {
+    u32 inode_bitmap_addr;
+    u32 block_bitmap_addr;
     u32 inodes_addr;
     u32 blocks_addr;
 } PACKED;
@@ -88,21 +85,47 @@ struct Dir
     u16 inode;
 };
 
+struct FsBitmap
+{
+    u8 data[(BITMAP_SIZE + 7) / 8]; 
+};
+
 ///////////////////////////////////////////////
 
+extern struct Superblock sb;
+extern struct Descriptor desc;
+extern struct FsBitmap   i_bmp;
+extern struct FsBitmap   b_bmp;
+
+///////////////////////////////////////////////
+
+// fs.c
 int fs_create(void);
 int fs_init(void);
 int fs_sync(void);
 
-int get_inode(u32 inode, struct Inode* out);
-u32 block_count(struct Inode* inode);
+// bitmap.c
+void bitmap_reset(struct FsBitmap* bmp);
+void bitmap_set(struct FsBitmap* bmp, u32 index);
+void bitmap_clear(struct FsBitmap* bmp, u32 index);
+int bitmap_get(struct FsBitmap* bmp, u32 index);
+u32 bitmap_find_free(struct FsBitmap* bmp); 
+void bitmap_print(struct FsBitmap* bmp);
 
+// inode.c
+int inode_get(u32 inode, struct Inode* out);
+int inode_set(u32 inode, struct Inode* in);
+int inode_alloc(u32* inode);
+u32 inode_block_count(struct Inode* inode);
+struct Dentry* inode_dentry_table(struct Inode* inode);
+
+// dir.c
 int dir_open(struct Dir* dir, const char* path);
 void dir_list(struct Dir* dir);
 char* dir_name(struct Dir* dir);
 
+// file.c
 int file_open(struct File* file, struct Dir* dir, const char* path);
-u32 file_get_size(struct File* file);
 int file_read(struct File* file, void* out);
 int file_write(struct File* file, void* in, u32 count);
 
