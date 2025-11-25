@@ -15,6 +15,7 @@ A small OS that I am creating for fun and to learn more about them
     - stat
     - cat
     - cd
+    - fsinfo
     - help
 
 ## Quick Start
