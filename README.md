@@ -1,6 +1,8 @@
  # CosmOS
 
-A small OS that I am creating for fun and to learn more about them
+CosmOS is a small operating system developed by me to learn more about them and to have fun doing so.
+
+It is primarily written in C with some minimal assembly for the x86 archetecture. 
 
 ## Features
 * VGA text mode printing
@@ -17,6 +19,14 @@ A small OS that I am creating for fun and to learn more about them
     - cd
     - fsinfo
     - help
+ 
+## Dependencies
+To build the project, you will need the following dependencies:
+* make
+* i686-elf cross compiler (gcc & ld)
+* grub-mkrescue
+* qemu-img
+* qemu-system-i386
 
 ## Quick Start
 To build kernel.iso use the following command:
