@@ -13,10 +13,6 @@ It is primarily written in C with some minimal assembly for the x86 archetecture
     - exit
     - echo
     - mkfs
-    - ls
-    - stat
-    - cat
-    - cd
     - fsinfo
     - help
  
