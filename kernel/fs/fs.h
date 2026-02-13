@@ -69,18 +69,13 @@ struct Inode
 
 struct Dentry
 {
-    char name[256];
+    char name[252];
     u8  name_len;
     u16 inode;
     u8  type;
 } PACKED;
 
 struct File
-{
-    u16 inode;
-};
-
-struct Dir
 {
     u16 inode;
 };
@@ -116,18 +111,12 @@ void bitmap_print(struct FsBitmap* bmp);
 int inode_get(u32 inode, struct Inode* out);
 int inode_set(u32 inode, struct Inode* in);
 int inode_alloc(u32* inode);
+int inode_alloc_blocks(u32 inode, u32 count);
 u32 inode_block_count(struct Inode* inode);
 struct Dentry* inode_dentry_table(struct Inode* inode);
 
-// dir.c
-int dir_open(struct Dir* dir, const char* path);
-void dir_list(struct Dir* dir);
-char* dir_name(struct Dir* dir);
-
-// file.c
-int file_open(struct File* file, struct Dir* dir, const char* path);
-int file_read(struct File* file, void* out);
-int file_write(struct File* file, void* in, u32 count);
+// block.c
+int block_alloc(u32* block);
 
 ///////////////////////////////////////////////
 

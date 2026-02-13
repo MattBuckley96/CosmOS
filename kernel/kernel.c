@@ -88,6 +88,8 @@ void kmain(void)
     printf("\n");
     print_splash();
 
+    printf("sizeof dentry: %i\n", sizeof(struct Dentry));
+
     shell_main();
 
     while (1)

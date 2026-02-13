@@ -16,17 +16,12 @@
 
 static bool running;
 static char args[MAX_ARGS][BUF_SIZE];
-static struct Dir dir;
 
 static char* builtin_commands[] = {
     "clear",
     "exit",
     "echo",
     "mkfs",
-    "ls",
-    "stat",
-    "cat",
-    "cd",
     "fsinfo",
     "help",
 };
@@ -36,10 +31,6 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_exit,
     shell_echo,
     shell_mkfs,
-    shell_ls,
-    shell_stat,
-    shell_cat,
-    shell_cd,
     shell_fsinfo,
     shell_help,
 };
@@ -54,10 +45,6 @@ static void prompt(void)
     vga_puts("OS", VGA_LIGHT_YELLOW);
     vga_puts(":", VGA_WHITE);
     vga_puts("/", VGA_LIGHT_CYAN);
-
-    char* name = dir_name(&dir);
-    if (name)
-        vga_puts(name, VGA_LIGHT_CYAN);
 
     vga_puts("$ ", VGA_WHITE);
 }
@@ -176,36 +163,11 @@ void shell_echo(int argc, char** argv)
 
     for (int i = 1; i < argc; i++)
     {
-        if (strcmp(argv[i], ">") == 0)
+        while (*argv[i])
         {
-            i++;
-            char* path = argv[i++];
-
-            struct File file;
-
-            int err = file_open(&file, &dir, path);
-            if (err)
-            {
-                printf("%s: %s: could not find file\n", argv[0], path);
-                return;
-            }
-
-            err = file_write(&file, buf, 1);
-            if (err)
-            {
-                printf("%s: %s: cannot write to file\n", argv[0], path);
-            }
-
-            return;
+            buf[pos++] = *argv[i]++;
         }
-        else
-        {
-            while (*argv[i])
-            {
-                buf[pos++] = *argv[i]++;
-            }
-            buf[pos++] = ' ';
-        }
+        buf[pos++] = ' ';
     }
 
     buf[pos] = '\0';
@@ -222,98 +184,6 @@ void shell_mkfs(int argc, char** argv)
     }
 
     printf("%s: successfully created file system!\n", argv[0]);
-}
-
-void shell_ls(int argc, char** argv)
-{
-    dir_list(&dir);
-}
-
-void shell_stat(int argc, char** argv)
-{
-    struct File file;
-
-    int err = file_open(&file, &dir, argv[1]);
-    if (err)
-    {
-        printf("stat: %s: file not found!\n", argv[1]);
-        return;
-    }
-
-    struct Inode inode;
-    inode_get(file.inode, &inode);
-
-    printf("inode: %i\n", file.inode);
-    printf("size: %i\n", inode.size);
-    printf("type: ");
-
-    switch (inode.type)
-    {
-    case (FS_FILE):
-        printf("file\n");
-        break;
-
-    case (FS_DIR):
-        printf("directory\n");
-        break;
-    }
-
-    u32 blocks = inode_block_count(&inode);
-    printf("blocks: %i\n", blocks);
-}
-
-void shell_cat(int argc, char** argv)
-{
-    struct File file;
-
-    int err = file_open(&file, &dir, argv[1]);
-    if (err)
-    {
-        printf("cat: %s: file not found!\n", argv[1]);
-        return;
-    }
-
-    struct Inode inode;
-    err = inode_get(file.inode, &inode);
-    if (err)
-    {
-        printf("cat: couldn't load inode!\n");
-        return;
-    }
-
-    if (inode.type == FS_DIR)
-    {
-        printf("cat: %s: is a directory.\n", argv[1]);
-        return;
-    }
-
-    // NOTE: hardcoded for now;
-    char buf[8192] = {};
-
-    err = file_read(&file, buf);
-    if (err)
-    {
-        printf("%s told me to tell you it couldnt read...", argv[1]);
-        return;
-    }
-
-    printf("%s\n", buf);
-}
-
-void shell_cd(int argc, char** argv)
-{
-    if (argc < 2)
-    {
-        dir.inode = 1;
-        return;
-    }
-
-    int err = dir_open(&dir, argv[1]);
-    if (err)
-    {
-        printf("%s: %s: couldnt find directory!\n", argv[0], argv[1]);
-        return;
-    }
 }
 
 void shell_fsinfo(int argc, char** argv)
@@ -349,10 +219,6 @@ void shell_help(int argc, char** argv)
 void shell_main(void)
 {
     running = true;
-
-    dir = (struct Dir) {
-        .inode = 1
-    };
 
     while (running)
     {

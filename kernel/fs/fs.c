@@ -114,7 +114,28 @@ int fs_create(void)
     bitmap_reset(&i_bmp);
     bitmap_reset(&b_bmp);
 
-    int err = fs_sync();
+
+    // create root
+    u32 inode = 0;
+
+    int err = inode_alloc(&inode);
+    if (err)
+        return err;
+
+    err = inode_set(inode, &(struct Inode){
+        .size = 0,
+        .type = FS_DIR,
+        .blocks = { 0 }
+    });
+    if (err)
+        return err;
+
+    err = inode_alloc_blocks(inode, 1);
+    if (err)
+        return err;
+
+
+    err = fs_sync();
     if (err)
         return err;
     

@@ -9,7 +9,6 @@ enum
     INODE_ERR_ALLOC = -1,
 };
 
-
 ///////////////////////////////////////////////
 
 int inode_get(u32 inode, struct Inode* out)
@@ -28,11 +27,31 @@ int inode_get(u32 inode, struct Inode* out)
     struct Inode* inodes = (struct Inode*)buf;
 
     *out = inodes[index];
-    return 0;
+
+    return INODE_ERR_NONE;
 }
 
 int inode_set(u32 inode, struct Inode* in)
 {
+    u8 buf[512];
+
+    u32 inodes_per_block = (sb.block_size / sizeof(struct Inode));
+    u32 block = (inode - 1) / inodes_per_block;
+
+    int err = ata_read(desc.inodes_addr + block, buf, 1);
+    if (err)
+        return -1;
+
+    u32 index = (inode - 1) % inodes_per_block;
+
+    struct Inode* inodes = (struct Inode*)buf;
+
+    inodes[index] = *in;
+
+    err = ata_write(desc.inodes_addr + block, buf, 1);
+    if (err)
+        return err;
+
     return INODE_ERR_NONE;
 }
 
@@ -43,17 +62,54 @@ int inode_alloc(u32* inode)
 
     u32 free = bitmap_find_free(&i_bmp);
     if (free == 0)
-        return INODE_ERR_NONE;
+        return INODE_ERR_ALLOC;
 
     bitmap_set(&i_bmp, (free - 1));
 
     sb.free_inodes--;
+    sb.state = FS_STATE_DIRTY;
 
     int err = fs_sync();
     if (err)
         return err;
 
     *inode = free;
+
+    return INODE_ERR_NONE;
+}
+
+int inode_alloc_blocks(u32 inode, u32 count)
+{
+    if (count == 0)
+        return INODE_ERR_NONE;
+
+    struct Inode s_inode;
+
+    int err = inode_get(inode, &s_inode);
+    if (err)
+        return err;
+
+    while (count > 0)
+    {
+        u32 blocks = inode_block_count(&s_inode);
+
+        if (blocks >= 10)
+            return INODE_ERR_ALLOC;
+
+        u32 block = 0;
+
+        err = block_alloc(&block);
+        if (err)
+            return INODE_ERR_ALLOC;
+
+        s_inode.blocks[blocks] = block;
+
+        err = inode_set(inode, &s_inode);
+        if (err)
+            return INODE_ERR_ALLOC;
+
+        count--;
+    }
 
     return INODE_ERR_NONE;
 }
