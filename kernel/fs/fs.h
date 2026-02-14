@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 #define FS_MAGIC 0x42
 
@@ -11,7 +11,7 @@
 #define MAX_INODES  (8 * 512)
 #define BITMAP_SIZE (8 * 512)
 
-///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 enum
 {
@@ -34,11 +34,10 @@ enum
 
 enum
 {
-    DIR_ERR_NONE   =  0,
-    DIR_ERR_OPEN   = -1,
+    IO_APPEND = (1 << 0),
 };
 
-///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 struct Superblock
 {
@@ -69,15 +68,16 @@ struct Inode
 
 struct Dentry
 {
-    char name[252];
-    u8  name_len;
     u16 inode;
     u8  type;
+    u8  name_len;
+    char name[252];
 } PACKED;
 
 struct File
 {
     u16 inode;
+    u8  flags;
 };
 
 struct FsBitmap
@@ -85,14 +85,14 @@ struct FsBitmap
     u8 data[(BITMAP_SIZE + 7) / 8]; 
 };
 
-///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 extern struct Superblock sb;
 extern struct Descriptor desc;
 extern struct FsBitmap   i_bmp;
 extern struct FsBitmap   b_bmp;
 
-///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 // fs.c
 int fs_create(void);
@@ -118,6 +118,15 @@ struct Dentry* inode_dentry_table(struct Inode* inode);
 // block.c
 int block_alloc(u32* block);
 
-///////////////////////////////////////////////
+// file.c
+int file_read(struct File* file, void* out);
+int file_write(struct File* file, const void* in, u32 count);
+int file_create(struct File* dir, const char* name, u8 type);
+
+// dir.c
+void dir_list(struct File* dir);
+int dentry_create(struct File* dir, struct Dentry* dentry);
+
+///////////////////////////////////////////////////////////////////////////////
 
 #endif

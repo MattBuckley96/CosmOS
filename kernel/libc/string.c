@@ -50,3 +50,28 @@ void* memcpy(void* restrict dest, const void* restrict src, size_t n)
 
     return dest;
 }
+
+size_t strlen(const char* s)
+{
+    size_t size = 0;
+    while (*s++)
+    {
+        size++;
+    }
+    return size;
+}
+
+char* strcpy(char* dest, const char* src)
+{
+    char *start = dest;
+
+    while (*src)
+    {
+        *dest = *src;
+        dest++;
+        src++;
+    }
+    *dest = '\0';
+
+    return start;
+}

@@ -33,7 +33,7 @@ int inode_get(u32 inode, struct Inode* out)
 
 int inode_set(u32 inode, struct Inode* in)
 {
-    u8 buf[512];
+    u8 buf[sb.block_size];
 
     u32 inodes_per_block = (sb.block_size / sizeof(struct Inode));
     u32 block = (inode - 1) / inodes_per_block;
@@ -131,7 +131,7 @@ u32 inode_block_count(struct Inode* inode)
 struct Dentry* inode_dentry_table(struct Inode* inode)
 {
     u32 blocks = inode_block_count(inode);
-    u8 buf[blocks * 512];
+    u8 buf[blocks * sb.block_size];
     u8* offset = (u8*)buf;
 
     // read all blocks into buffer
@@ -146,7 +146,7 @@ struct Dentry* inode_dentry_table(struct Inode* inode)
         if (err)
             return NULL;
 
-        offset += 512;
+        offset += sb.block_size;
     }
 
     struct Dentry* dentry = (struct Dentry*)buf;

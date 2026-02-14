@@ -116,30 +116,56 @@ int fs_create(void)
 
 
     // create root
-    u32 inode = 0;
+    {
+        u32 inode = 0;
 
-    int err = inode_alloc(&inode);
-    if (err)
-        return err;
+        int err = inode_alloc(&inode);
+        if (err)
+            return err;
 
-    err = inode_set(inode, &(struct Inode){
-        .size = 0,
-        .type = FS_DIR,
-        .blocks = { 0 }
-    });
-    if (err)
-        return err;
+        err = inode_set(inode, &(struct Inode){
+            .size = 0,
+            .type = FS_DIR,
+            .blocks = {},
+        });
+        if (err)
+            return err;
 
-    err = inode_alloc_blocks(inode, 1);
-    if (err)
-        return err;
+        err = inode_alloc_blocks(inode, 1);
+        if (err)
+            return err;
 
+        u8 buf[sb.block_size];
+        struct Dentry self = {
+            .inode = inode,
+            .type = FS_DIR,
+            .name_len = 1,
+            .name = "."
+        };
+        struct Dentry parent = {
+            .inode = inode,
+            .type = FS_DIR,
+            .name_len = 2,
+            .name = ".."
+        };
+        memcpy(buf, &self, sizeof(struct Dentry));
+        memcpy(buf + sizeof(struct Dentry), &parent, sizeof(struct Dentry));
 
-    err = fs_sync();
-    if (err)
-        return err;
-    
-    err = fs_init();
+        struct File root = {
+            .inode = 1,
+        };
+
+        // for testing
+        err = file_write(&root, buf, sizeof(buf));
+        if (err)
+            return err;
+
+        err = file_create(&root, "test", FS_FILE);
+        if (err)
+            return err;
+    }
+
+    int err = fs_sync();
     if (err)
         return err;
 

@@ -16,6 +16,7 @@
 
 static bool running;
 static char args[MAX_ARGS][BUF_SIZE];
+static struct File dir;
 
 static char* builtin_commands[] = {
     "clear",
@@ -23,6 +24,9 @@ static char* builtin_commands[] = {
     "echo",
     "mkfs",
     "fsinfo",
+    "ls",
+    "stat",
+
     "help",
 };
 
@@ -32,6 +36,9 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_echo,
     shell_mkfs,
     shell_fsinfo,
+    shell_ls,
+    shell_stat,
+
     shell_help,
 };
 
@@ -204,6 +211,53 @@ void shell_fsinfo(int argc, char** argv)
     printf("blocks_addr: %i\n", desc.blocks_addr);
 }
 
+void shell_ls(int argc, char** argv)
+{
+    dir_list(&dir);
+}
+
+void shell_stat(int argc, char** argv)
+{
+    struct Inode inode;
+
+    if (argc < 2)
+    {
+        printf("%s: usage: stat <inode>\n", argv[0]);
+        return;
+    }
+
+    u32 i = *argv[1] - '0';
+
+    if (i == 0)
+    {
+        printf("%s: invalid inode: %i\n", argv[0], i);
+        return;
+    }
+
+    int err = inode_get(i, &inode);
+    if (err)
+        return;
+
+    printf("inode: %i\n", i);
+    printf("size: %i\n", inode.size);
+    printf("blocks: %i\n", inode_block_count(&inode));
+
+    printf("type: ");
+
+    switch (inode.type)
+    {
+        case FS_FILE:
+        {
+            printf("file\n");
+        } break;
+
+        case FS_DIR:
+        {
+            printf("dir\n");
+        } break;
+    }
+}
+
 void shell_help(int argc, char** argv)
 {
     printf("Available commands (%i):\n\n", BUILTIN_SIZE);
@@ -219,6 +273,10 @@ void shell_help(int argc, char** argv)
 void shell_main(void)
 {
     running = true;
+
+    dir = (struct File){
+        .inode = 1,
+    };
 
     while (running)
     {
