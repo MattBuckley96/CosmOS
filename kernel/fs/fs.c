@@ -135,7 +135,6 @@ int fs_create(void)
         if (err)
             return err;
 
-        u8 buf[sb.block_size];
         struct Dentry self = {
             .inode = inode,
             .type = FS_DIR,
@@ -148,15 +147,16 @@ int fs_create(void)
             .name_len = 2,
             .name = ".."
         };
-        memcpy(buf, &self, sizeof(struct Dentry));
-        memcpy(buf + sizeof(struct Dentry), &parent, sizeof(struct Dentry));
 
         struct File root = {
             .inode = 1,
         };
 
-        // for testing
-        err = file_write(&root, buf, sizeof(buf));
+        err = dentry_create(&root, &self);
+        if (err)
+            return err;
+
+        err = dentry_create(&root, &parent);
         if (err)
             return err;
 

@@ -58,9 +58,14 @@ int dentry_create(struct File* dir, struct Dentry* dentry)
         return err;
 
     u32 dentry_count = (inode.size / sizeof(struct Dentry));
-    u32 index = dentry_count - 1;
+    u32 index = dentry_count;
 
-    if (dentry_count % 2 == 0)
+    u32 d_needed = dentry_count + 1;
+
+    u32 blocks = inode_block_count(&inode);
+    u32 size_needed = (d_needed * sizeof(struct Dentry));
+
+    if ((blocks * sb.block_size) < size_needed)
     {
         err = inode_alloc_blocks(dir->inode, 1);
         if (err)
@@ -70,10 +75,9 @@ int dentry_create(struct File* dir, struct Dentry* dentry)
         if (err)
             return err;
 
-        index++;
+        blocks = inode_block_count(&inode);
     }
 
-    u32 blocks = inode_block_count(&inode);
     u8 buf[blocks * sb.block_size];
 
     err = file_read(dir, buf);
