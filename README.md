@@ -14,6 +14,8 @@ It is primarily written in C with some minimal assembly for the x86 archetecture
     - echo
     - mkfs
     - fsinfo
+    - stat
+    - cat
     - help
  
 ## Dependencies
