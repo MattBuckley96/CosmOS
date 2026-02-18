@@ -15,7 +15,7 @@ struct FsBitmap   b_bmp;
 
 int fs_init(void)
 {
-    u8 buf[512];
+    u8 buf[512] = {};
 
     int err = ata_read(2, buf, 1);
     if (err)
@@ -54,7 +54,7 @@ int fs_sync(void)
     if (sb.state != FS_STATE_DIRTY)
         return FS_ERR_NONE;
 
-    u8 buf[512];
+    u8 buf[512] = {};
 
     // block bitmap
     memcpy(buf, &b_bmp, sizeof(i_bmp));
@@ -135,32 +135,34 @@ int fs_create(void)
         if (err)
             return err;
 
-        struct Dentry self = {
-            .inode = inode,
-            .type = FS_DIR,
-            .name_len = 1,
-            .name = "."
-        };
-        struct Dentry parent = {
-            .inode = inode,
-            .type = FS_DIR,
-            .name_len = 2,
-            .name = ".."
-        };
 
         struct File root = {
             .inode = 1,
         };
 
-        err = dentry_create(&root, &self);
+        err = dentry_create(&root, &(struct Dentry){
+            .inode = inode,
+            .type = FS_DIR,
+            .name_len = 1,
+            .name = "."
+        });
         if (err)
             return err;
 
-        err = dentry_create(&root, &parent);
+        err = dentry_create(&root, &(struct Dentry){
+            .inode = inode,
+            .type = FS_DIR,
+            .name_len = 2,
+            .name = ".."
+        });
         if (err)
             return err;
 
         err = file_create(&root, "test", FS_FILE);
+        if (err)
+            return err;
+
+        err = file_write(&(struct File){ .inode = 2 }, "test", 5);
         if (err)
             return err;
     }

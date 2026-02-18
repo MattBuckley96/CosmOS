@@ -51,6 +51,18 @@ void* memcpy(void* restrict dest, const void* restrict src, size_t n)
     return dest;
 }
 
+void* memset(void *mem, int c, size_t n)
+{
+    unsigned char* s = (unsigned char*)mem;
+
+    for (size_t i = 0; i < n; i++)
+    {
+        s[i] = (unsigned char)c;
+    }
+
+    return mem;
+}
+
 size_t strlen(const char* s)
 {
     size_t size = 0;

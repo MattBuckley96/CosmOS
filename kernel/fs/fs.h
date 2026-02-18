@@ -122,6 +122,7 @@ int block_alloc(u32* block);
 int file_read(struct File* file, void* out);
 int file_write(struct File* file, const void* in, u32 count);
 int file_create(struct File* dir, const char* name, u8 type);
+int file_open(struct File* dir, const char* name, struct File* file, u8 flags);
 
 // dir.c
 void dir_list(struct File* dir);

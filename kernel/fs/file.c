@@ -11,10 +11,12 @@ enum
     FILE_ERR_WRITE  = -1,
     FILE_ERR_APPEND = -2,
     FILE_ERR_CREATE = -3,
+    FILE_ERR_OPEN   = -4,
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// TODO: switch to writing based off of remaining rather than the count
 static int overwrite(struct File* file, const void* in, u32 size)
 {
     struct Inode inode;
@@ -36,23 +38,37 @@ static int overwrite(struct File* file, const void* in, u32 size)
         err = inode_alloc_blocks(file->inode, (count - blocks));
         if (err)
             return err;
+
+        int err = inode_get(file->inode, &inode);
+        if (err)
+            return err;
     }
 
     inode.size = size;
-
-    u8 block_buf[sb.block_size];
     u8* in_buf = (u8*)in;
+
+    u32 remaining = size;
 
     // HACK: hardcoded 10 block size
     for (int i = 0; i < 10; i++)
     {
+        u8 block_buf[sb.block_size] = {};
+
         if (count == 0)
             break;
 
         if (inode.blocks[i] == 0)
             continue;
 
-        memcpy(block_buf, in_buf, sb.block_size);
+        if (remaining > sb.block_size)
+        {
+            memcpy(block_buf, in_buf, sb.block_size);
+            remaining -= sb.block_size;
+        }
+        else
+        {
+            memcpy(block_buf, in_buf, remaining);
+        }
 
         u32 block = inode.blocks[i] - 1;
 
@@ -87,8 +103,8 @@ int file_read(struct File* file, void* out)
     if (err)
         return err;
 
-    u8 block_buf[sb.block_size];
     u8* out_buf = (u8*)out;
+    u32 remaining = inode.size;
 
     // HACK: still hardcoded
     for (int i = 0; i < 10; i++)
@@ -96,13 +112,23 @@ int file_read(struct File* file, void* out)
         if (inode.blocks[i] == 0)
             continue;
 
+        u8 block_buf[sb.block_size] = {};
         u32 block = inode.blocks[i] - 1;
 
         err = ata_read(desc.blocks_addr + block, block_buf, 1);
         if (err)
             return err;
 
-        memcpy(out_buf, block_buf, sb.block_size);
+        if (remaining > sb.block_size)
+        {
+            memcpy(out_buf, block_buf, sb.block_size);
+            remaining -= sb.block_size;
+        }
+        else
+        {
+            memcpy(out_buf, block_buf, remaining);
+        }
+
         out_buf += sb.block_size;
     }
 
@@ -152,4 +178,32 @@ int file_create(struct File* dir, const char* name, u8 type)
         return err;
 
     return FILE_ERR_NONE;
+}
+
+int file_open(struct File* dir, const char* name, struct File* file, u8 flags)
+{
+    struct Inode dir_inode;
+
+    int err = inode_get(dir->inode, &dir_inode);
+    if (err)
+        return err;
+
+    struct Dentry* table = inode_dentry_table(&dir_inode);
+    if (!table)
+        return FILE_ERR_OPEN;
+
+    u32 count = (dir_inode.size / sizeof(struct Dentry)); 
+
+    for (int i = 0; i < count; i++)
+    {
+        if (strcmp(name, table[i].name) == 0)
+        {
+            file->inode = table[i].inode;
+            file->flags = flags;
+
+            return FILE_ERR_NONE;
+        }
+    }
+
+    return FILE_ERR_OPEN;
 }

@@ -78,8 +78,8 @@ int dentry_create(struct File* dir, struct Dentry* dentry)
         blocks = inode_block_count(&inode);
     }
 
-    u8 buf[blocks * sb.block_size];
-
+    u8 buf[blocks * sb.block_size] = {};
+ 
     err = file_read(dir, buf);
     if (err)
         return err;

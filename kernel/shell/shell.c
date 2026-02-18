@@ -26,6 +26,7 @@ static char* builtin_commands[] = {
     "fsinfo",
     "ls",
     "stat",
+    "cat",
 
     "help",
 };
@@ -38,6 +39,7 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_fsinfo,
     shell_ls,
     shell_stat,
+    shell_cat,
 
     shell_help,
 };
@@ -258,6 +260,56 @@ void shell_stat(int argc, char** argv)
     }
 }
 
+void shell_cat(int argc, char** argv)
+{
+    if (argc < 2)
+    {
+        printf("%s: usage: %s <file>\n", argv[0], argv[0]);
+        return;
+    }
+
+    struct File file;
+
+    int err = file_open(&dir, argv[1], &file, 0); 
+    if (err)
+    {
+        printf("%s: couldnt find file: %s\n", argv[0], argv[1]);
+        return;
+    }
+
+    struct Inode inode;
+
+    err = inode_get(file.inode, &inode);
+    if (err)
+    {
+        printf("%s: couldnt get inode: %i\n", argv[0], file.inode);
+        return;
+    }
+
+    if (inode.type == FS_DIR)
+    {
+        printf("%s: %s is a directory\n", argv[0], argv[1]);
+        return;
+    }
+
+    if (inode.size == 0)
+    {
+        printf("%s: can't read a file if theres nothing to read...\n", argv[0]);
+        return;
+    }
+
+    char buf[inode.size] = {};
+
+    err = file_read(&file, buf);
+    if (err)
+    {
+        printf("%s told me to tell you, it couldn't read the file: %s\n", argv[0], argv[1]);
+        return;
+    }
+
+    printf("%s\n", buf);
+}
+
 void shell_help(int argc, char** argv)
 {
     printf("Available commands (%i):\n\n", BUILTIN_SIZE);
@@ -282,7 +334,7 @@ void shell_main(void)
     {
         char line[BUF_SIZE] = {};
         int argc = 0;
-        char* argv[MAX_ARGS];
+        char* argv[MAX_ARGS] = {};
 
         prompt();
     
