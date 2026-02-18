@@ -27,6 +27,7 @@ static char* builtin_commands[] = {
     "ls",
     "stat",
     "cat",
+    "cd",
 
     "help",
 };
@@ -40,6 +41,7 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_ls,
     shell_stat,
     shell_cat,
+    shell_cd,
 
     shell_help,
 };
@@ -53,7 +55,62 @@ static void prompt(void)
     vga_puts("Cosm", VGA_LIGHT_MAGENTA);
     vga_puts("OS", VGA_LIGHT_YELLOW);
     vga_puts(":", VGA_WHITE);
-    vga_puts("/", VGA_LIGHT_CYAN);
+
+    // TODO: refactor whatever the FUCK this is
+    struct File old = dir;
+
+    // max dir depth of 10
+    int pos = 9;
+    char buf[10][252] = {};
+
+    for (int i = 0; i < 100; i++)
+    {
+        if (pos == 0)
+            break;
+
+        u32 prev_inode = dir.inode;
+
+        if (prev_inode == 1)
+            break;
+
+        // HACK: sigh
+        char* argv[] = { "cd", ".." };
+        shell_cd(2, argv);
+
+        struct Inode inode;
+        int err = inode_get(dir.inode, &inode);
+        if (err)
+            break;
+        
+        u32 count = (inode.size / sizeof(struct Dentry));
+        struct Dentry* table = inode_dentry_table(&inode);
+        if (!table)
+            break;
+
+        for (int j = 0; j < count; j++)
+        {
+            if (table[j].inode == prev_inode)
+            {
+                strcpy(buf[pos--], table[j].name);
+            }
+        }
+    }
+
+    int c = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        if (!buf[i][0])
+            continue;
+
+        vga_putc('/', VGA_LIGHT_CYAN);
+        vga_puts(buf[i], VGA_LIGHT_CYAN);
+        c++;
+    }
+
+    if (c == 0)
+        vga_putc('/', VGA_LIGHT_CYAN);
+
+    dir = old;
 
     vga_puts("$ ", VGA_WHITE);
 }
@@ -308,6 +365,41 @@ void shell_cat(int argc, char** argv)
     }
 
     printf("%s\n", buf);
+}
+
+void shell_cd(int argc, char** argv)
+{
+    if (argc < 2)
+    {
+        printf("%s: usage: %s <dir>\n", argv[0], argv[0]);
+        return;
+    }
+
+    struct File file;
+
+    int err = file_open(&dir, argv[1], &file, 0);
+    if (err)
+    {
+        printf("%s: couldnt find file: %s\n", argv[0], argv[1]);
+        return;
+    }
+
+    struct Inode inode;
+
+    err = inode_get(file.inode, &inode);
+    if (err)
+    {
+        printf("%s: couldnt get inode: %i\n", argv[0], file.inode);
+        return;
+    }
+
+    if (inode.type != FS_DIR)
+    {
+        printf("%s: %s is not a directory\n", argv[0], argv[1]);
+        return;
+    }
+
+    dir = file;
 }
 
 void shell_help(int argc, char** argv)

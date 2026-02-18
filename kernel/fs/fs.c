@@ -162,7 +162,15 @@ int fs_create(void)
         if (err)
             return err;
 
-        err = file_write(&(struct File){ .inode = 2 }, "test", 5);
+        err = file_write(&(struct File){ .inode = 2 }, "test", 5); 
+        if (err)
+            return err;
+
+        err = file_create(&root, "deep", FS_DIR);
+        if (err)
+            return err;
+
+        err = file_create(&(struct File){ .inode = 3 }, "deeper", FS_DIR);
         if (err)
             return err;
     }

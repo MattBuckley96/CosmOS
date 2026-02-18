@@ -16,6 +16,7 @@ It is primarily written in C with some minimal assembly for the x86 archetecture
     - fsinfo
     - stat
     - cat
+    - cd
     - help
  
 ## Dependencies

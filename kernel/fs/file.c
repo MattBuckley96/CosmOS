@@ -177,6 +177,31 @@ int file_create(struct File* dir, const char* name, u8 type)
     if (err)
         return err;
 
+    if (type == FS_DIR)
+    {
+        struct File file = {
+            .inode = inode
+        };
+
+        err = dentry_create(&file, &(struct Dentry){
+            .inode = inode,
+            .type = FS_DIR,
+            .name_len = 1,
+            .name = "."
+        });
+        if (err)
+            return err;
+
+        err = dentry_create(&file, &(struct Dentry){
+            .inode = dir->inode,
+            .type = FS_DIR,
+            .name_len = 2,
+            .name = ".."
+        });
+        if (err)
+            return err;
+    }
+
     return FILE_ERR_NONE;
 }
 
