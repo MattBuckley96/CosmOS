@@ -148,9 +148,26 @@ int file_write(struct File* file, const void* in, u32 size)
 
 int file_create(struct File* dir, const char* name, u8 type)
 {
+    struct Inode dir_inode;
+
+    int err = inode_get(dir->inode, &dir_inode);
+    if (err)
+        return err;
+
+    u32 count = (dir_inode.size / sizeof(struct Dentry));
+    struct Dentry* table = inode_dentry_table(&dir_inode);
+    if (!table)
+        return FILE_ERR_CREATE;
+
+    for (int i = 0; i < count; i++)
+    {
+        if (strcmp(name, table[i].name) == 0)
+            return FILE_ERR_CREATE;
+    }
+
     u32 inode = 0;
 
-    int err = inode_alloc(&inode);
+    err = inode_alloc(&inode);
     if (err)
         return err;
 

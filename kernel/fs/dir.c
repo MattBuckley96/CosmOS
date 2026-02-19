@@ -32,20 +32,26 @@ void dir_list(struct File* dir)
 
     u32 count = (inode.size / sizeof(struct Dentry));
 
+    // first pass do all dirs
     for (int i = 0; i < count; i++)
     {
-        u8 col = VGA_LIGHT_GRAY;
-
-        if (table[i].type == FS_DIR)
-        {
-            col = VGA_LIGHT_CYAN;
-        }
+        if (table[i].type != FS_DIR)
+            continue;
 
         for (int j = 0; j < table[i].name_len; j++)
         {
-            vga_putc(table[i].name[j], col);
+            vga_putc(table[i].name[j], VGA_LIGHT_CYAN);
         }
         printf("\n");
+    }
+
+    // second pass do everything else
+    for (int i = 0; i < count; i++)
+    {
+        if (table[i].type == FS_DIR)
+            continue;
+
+        printf("%s\n", table[i].name);
     }
 }
 

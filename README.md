@@ -17,6 +17,8 @@ It is primarily written in C with some minimal assembly for the x86 archetecture
     - stat
     - cat
     - cd
+    - mkdir
+    - touch
     - help
  
 ## Dependencies

@@ -28,6 +28,8 @@ static char* builtin_commands[] = {
     "stat",
     "cat",
     "cd",
+    "mkdir",
+    "touch",
 
     "help",
 };
@@ -42,6 +44,8 @@ static void (*builtin_table[])(int argc, char** argv) = {
     shell_stat,
     shell_cat,
     shell_cd,
+    shell_mkdir,
+    shell_touch,
 
     shell_help,
 };
@@ -277,27 +281,31 @@ void shell_ls(int argc, char** argv)
 
 void shell_stat(int argc, char** argv)
 {
-    struct Inode inode;
-
     if (argc < 2)
     {
-        printf("%s: usage: stat <inode>\n", argv[0]);
+        printf("%s: usage: %s <file>\n", argv[0], argv[0]);
         return;
     }
 
-    u32 i = *argv[1] - '0';
+    struct File file;
 
-    if (i == 0)
-    {
-        printf("%s: invalid inode: %i\n", argv[0], i);
-        return;
-    }
-
-    int err = inode_get(i, &inode);
+    int err = file_open(&dir, argv[1], &file, 0);
     if (err)
+    {
+        printf("%s: could not open file: %s\n", argv[0], argv[1]);
         return;
+    }
 
-    printf("inode: %i\n", i);
+    struct Inode inode;
+
+    err = inode_get(file.inode, &inode);
+    if (err)
+    {
+        printf("%s: could not read inode: %i\n", argv[0], file.inode);
+        return;
+    }
+
+    printf("inode: %i\n", file.inode);
     printf("size: %i\n", inode.size);
     printf("blocks: %i\n", inode_block_count(&inode));
 
@@ -351,7 +359,6 @@ void shell_cat(int argc, char** argv)
 
     if (inode.size == 0)
     {
-        printf("%s: can't read a file if theres nothing to read...\n", argv[0]);
         return;
     }
 
@@ -371,7 +378,9 @@ void shell_cd(int argc, char** argv)
 {
     if (argc < 2)
     {
-        printf("%s: usage: %s <dir>\n", argv[0], argv[0]);
+        dir = (struct File){
+            .inode = 1
+        };
         return;
     }
 
@@ -400,6 +409,36 @@ void shell_cd(int argc, char** argv)
     }
 
     dir = file;
+}
+
+void shell_mkdir(int argc, char** argv)
+{
+    if (argc < 2)
+    {
+        printf("%s: usage: %s <dir>\n", argv[0], argv[0]);
+        return;
+    }
+
+    int err = file_create(&dir, argv[1], FS_DIR);
+    if (err)
+    {
+        printf("%s: error making directory: %s\n", argv[0], argv[1]);
+    }
+}
+
+void shell_touch(int argc, char** argv)
+{
+    if (argc < 2)
+    {
+        printf("%s: usage: %s <file>\n", argv[0], argv[0]);
+        return;
+    }
+
+    int err = file_create(&dir, argv[1], FS_FILE);
+    if (err)
+    {
+        printf("%s: error creating file: %s\n", argv[0], argv[1]);
+    }
 }
 
 void shell_help(int argc, char** argv)

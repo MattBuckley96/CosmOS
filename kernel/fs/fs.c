@@ -158,7 +158,7 @@ int fs_create(void)
         if (err)
             return err;
 
-        err = file_create(&root, "test", FS_FILE);
+        err = file_create(&root, "test.txt", FS_FILE);
         if (err)
             return err;
 
