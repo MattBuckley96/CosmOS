@@ -24,9 +24,7 @@ int fs_init(void)
     sb = *(struct Superblock*)buf;
 
     if (sb.magic != FS_MAGIC)
-    {
         return FS_ERR_INIT;
-    }
 
     err = ata_read(3, buf, 1);
     if (err)
@@ -162,15 +160,7 @@ int fs_create(void)
         if (err)
             return err;
 
-        err = file_write(&(struct File){ .inode = 2 }, "test", 5); 
-        if (err)
-            return err;
-
-        err = file_create(&root, "deep", FS_DIR);
-        if (err)
-            return err;
-
-        err = file_create(&(struct File){ .inode = 3 }, "deeper", FS_DIR);
+        err = file_write(&(struct File){ .inode = 2 }, "test", 5);
         if (err)
             return err;
     }

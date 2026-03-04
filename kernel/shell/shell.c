@@ -233,14 +233,56 @@ void shell_echo(int argc, char** argv)
 
     for (int i = 1; i < argc; i++)
     {
-        while (*argv[i])
+        if (strcmp(argv[i], ">") == 0)
         {
-            buf[pos++] = *argv[i]++;
+            buf[pos] = '\0';
+
+            i++;
+            char* path = argv[i++];
+
+            struct File file;
+
+            int err = file_open(&dir, path, &file, 0);
+            if (err)
+            {
+                printf("%s: could not find file: %s\n", argv[0], path);
+                return;
+            }
+
+            struct Inode inode;
+            err = inode_get(file.inode, &inode);
+            if (err)
+            {
+                printf("%s: could not retrieve inode: %i\n", argv[0], file.inode);
+                return;
+            }
+
+            if (inode.type == FS_DIR)
+            {
+                printf("%s: cannot write to a directory\n", argv[0]);
+                return;
+            }
+
+            err = file_write(&file, buf, pos);
+            if (err)
+            {
+                printf("%s: could not write to file: %s\n", argv[0], path);
+                return;
+            }
+
+            return;
         }
-        buf[pos++] = ' ';
+        else
+        {
+            while (*argv[i])
+            {
+                buf[pos++] = *argv[i]++;
+            }
+            buf[pos++] = ' ';
+        }
     }
 
-    buf[pos] = '\0';
+    buf[pos] = '\0'; 
     printf("%s\n", buf);
 }
 
@@ -362,7 +404,7 @@ void shell_cat(int argc, char** argv)
         return;
     }
 
-    char buf[inode.size] = {};
+    char buf[inode.size];
 
     err = file_read(&file, buf);
     if (err)

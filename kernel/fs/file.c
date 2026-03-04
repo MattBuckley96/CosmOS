@@ -28,11 +28,11 @@ static int overwrite(struct File* file, const void* in, u32 size)
     u32 blocks = inode_block_count(&inode);
 
     float f_count = (size / (float)sb.block_size);
-    u32 count = (u32)f_count;
+    u32 count = (u32)(f_count);
 
-    if ((f_count - count) > 0)
+    if ((f_count - count) > 0.0f)
         count++;
- 
+
     if (blocks < count)
     {
         err = inode_alloc_blocks(file->inode, (count - blocks));
@@ -44,6 +44,7 @@ static int overwrite(struct File* file, const void* in, u32 size)
             return err;
     }
 
+    // TODO: should i set size here?
     inode.size = size;
     u8* in_buf = (u8*)in;
 
@@ -52,7 +53,7 @@ static int overwrite(struct File* file, const void* in, u32 size)
     // HACK: hardcoded 10 block size
     for (int i = 0; i < 10; i++)
     {
-        u8 block_buf[sb.block_size] = {};
+        u8 block_buf[sb.block_size];
 
         if (count == 0)
             break;
@@ -87,9 +88,8 @@ static int overwrite(struct File* file, const void* in, u32 size)
     return FILE_ERR_NONE;
 }
 
-int append(struct File* file, const void* in, u32 count)
+static int append(struct File* file, const void* in, u32 size)
 {
-    // TODO: append 
     return FILE_ERR_APPEND;
 }
 
@@ -112,7 +112,7 @@ int file_read(struct File* file, void* out)
         if (inode.blocks[i] == 0)
             continue;
 
-        u8 block_buf[sb.block_size] = {};
+        u8 block_buf[sb.block_size];
         u32 block = inode.blocks[i] - 1;
 
         err = ata_read(desc.blocks_addr + block, block_buf, 1);
@@ -141,7 +141,7 @@ int file_write(struct File* file, const void* in, u32 size)
     u8 flags = file->flags;
 
     if (flags & IO_APPEND)
-        return FILE_ERR_WRITE;
+        return append(file, in, size);
 
     return overwrite(file, in, size);
 }
