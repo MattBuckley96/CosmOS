@@ -13,7 +13,7 @@ void vga_init(void)
     cur_y = 0;
     cur_color = vga_color(7, 0);
 
-    cursor_enable(0, 0);
+    cursor_enable(0, 14);
 
     for (u32 i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
         vga[i] = vga_entry(' ', cur_color);
