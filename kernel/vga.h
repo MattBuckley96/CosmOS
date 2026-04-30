@@ -25,12 +25,12 @@ typedef enum vga_color {
 	VGA_WHITE = 15,
 } vga_color_t;
 
-inline u8 vga_color(u8 fg, u8 bg)
+static inline u8 vga_color(u8 fg, u8 bg)
 {
     return fg | bg << 4;
 }
 
-inline u16 vga_entry(char c, u8 color)
+static inline u16 vga_entry(char c, u8 color)
 {
     return (u16)c | (u16)color << 8;
 }

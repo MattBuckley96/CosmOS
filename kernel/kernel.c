@@ -1,13 +1,18 @@
 #include "vga.h"
 #include "gdt.h"
+#include "idt.h"
 
 void kmain(void)
 {
     vga_init();
 
-    // gdt init
     vga_print("Initializing GDT...\n");
     gdt_init();
+
+    vga_print("Initializing IDT...\n");
+    idt_init();
+
+    vga_putchar(1 / 0);
 
     // splash
     vga_set_color(VGA_WHITE, VGA_BLACK);

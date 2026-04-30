@@ -13,10 +13,10 @@ resb 16384
 stack_top:
 
 section .text
-global start
+global _start
 extern kmain
 
-start:
+_start:
     cli
     mov esp, stack_top
     call kmain

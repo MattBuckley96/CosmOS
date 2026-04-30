@@ -1,17 +1,17 @@
 #include "gdt.h"
 #include "util.h"
 
-extern void gdt_flush(u32 addr);
-extern void tss_flush(void);
-
-gdt_entry_t gdt_entries[6];
+gdt_entry_t gdt[6];
 gdtr_t gdtr;
 tss_entry_t tss_entry;
+
+extern void gdt_flush(u32 addr);
+extern void tss_flush(void);
 
 void gdt_init(void)
 {
     gdtr.limit = (sizeof(gdt_entry_t) * 6) - 1;
-    gdtr.base = (u32)&gdt_entries;
+    gdtr.base = (u32)&gdt;
 
     gdt_set_gate(0, 0, 0, 0, 0); // null
     gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // kernel code
@@ -26,15 +26,15 @@ void gdt_init(void)
 
 void gdt_set_gate(u32 num, u32 base, u32 limit, u8 access, u8 gran)
 {
-    gdt_entries[num].base_hi = base & 0xFFFF;
-    gdt_entries[num].base_mid = (base >> 16) & 0xFF;
-    gdt_entries[num].base_hi = (base >> 24) & 0xFF;
+    gdt[num].base_hi = base & 0xFFFF;
+    gdt[num].base_mid = (base >> 16) & 0xFF;
+    gdt[num].base_hi = (base >> 24) & 0xFF;
 
-    gdt_entries[num].limit = limit & 0xFFFF;
-    gdt_entries[num].flags = (limit >> 16) & 0x0F;
-    gdt_entries[num].flags |= gran & 0xF0;
+    gdt[num].limit = limit & 0xFFFF;
+    gdt[num].flags = (limit >> 16) & 0x0F;
+    gdt[num].flags |= gran & 0xF0;
 
-    gdt_entries[num].access = access;
+    gdt[num].access = access;
 }
 
 void tss_write(u32 num, u16 ss0, u32 esp0)
