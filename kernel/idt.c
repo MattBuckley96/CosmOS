@@ -5,8 +5,7 @@
 
 idt_entry_t idt[256];
 idtr_t idtr;
-
-void* irq_routines[16];
+irq_handler_t irq_routines[16];
 
 extern void idt_flush(u32 addr);
 
@@ -16,6 +15,7 @@ void idt_init(void)
     idtr.base = (u32)&idt;
 
     memset(&idt, 0, sizeof(idt));
+    memset(&irq_routines, 0, sizeof(irq_routines));
 
     // 0x20 cmd 0x21 data
     // 0xA0 cmd 0xA1 data
@@ -66,8 +66,6 @@ void idt_init(void)
     idt_set_gate(29, (u32)isr29, 0x08, 0x8E);
     idt_set_gate(30, (u32)isr30, 0x08, 0x8E);
     idt_set_gate(31, (u32)isr31, 0x08, 0x8E);
-
-    memset(&irq_routines, 0, sizeof(irq_routines));
 
     idt_set_gate(32, (u32)irq0, 0x08, 0x8E);
     idt_set_gate(33, (u32)irq1, 0x08, 0x8E);
@@ -146,9 +144,11 @@ void isr_handler(idt_regs_t* regs)
     }
 }
 
-void irq_install(u8 irq, void (*handler)(idt_regs_t* regs))
+void irq_install(u8 irq, irq_handler_t handler)
 {
-    irq_routines[irq] = handler;
+    if (irq < 16) {
+        irq_routines[irq] = handler;
+    }
 }
 
 void irq_uninstall(u8 irq)
@@ -158,16 +158,14 @@ void irq_uninstall(u8 irq)
 
 void irq_handler(idt_regs_t* regs)
 {
-    void (*handler)(idt_regs_t* regs);
-    handler = irq_routines[regs->int_no - 32];
+    u8 irq = (u8)(regs->int_no - 32);
 
-    if (handler) {
-        handler(regs);
+    if (irq < 16 && irq_routines[irq]) {
+        irq_routines[irq](regs);
     }
 
-    if (regs->int_no >= 40) {
+    if (irq >= 8) {
         outb(0xA0, 0x20);
     }
-
     outb(0x20, 0x20);
 }

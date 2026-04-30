@@ -23,8 +23,12 @@ typedef struct idt_regs {
     u32 eip, csm, eflags, useresp, ss;
 } PACKED idt_regs_t;
 
+typedef void (*irq_handler_t)(idt_regs_t* regs);
+
 void idt_init(void);
 void idt_set_gate(u8 num, u32 base, u16 sel, u8 flags);
+void irq_install(u8 irq, irq_handler_t handler);
+void irq_uninstall(u8 irq);
 
 extern void isr0();
 extern void isr1();

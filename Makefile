@@ -1,4 +1,5 @@
 CC = i686-elf-gcc
+LD = i386-elf-ld
 CFLAGS = -ffreestanding -fno-builtin -Wall -Wextra -g
 
 .PHONY: boot kernel image clean
@@ -15,10 +16,11 @@ kernel:
 	$(CC) $(CFLAGS) -c kernel/vga.c -o vga.o
 	$(CC) $(CFLAGS) -c kernel/gdt.c -o gdt.o
 	$(CC) $(CFLAGS) -c kernel/idt.c -o idt.o
+	$(CC) $(CFLAGS) -c kernel/timer.c -o timer.o
 
 image: clean boot kernel
 	mkdir -p build/boot/grub
-	ld -m elf_i386 -nostdlib -T linker.ld -o kernel.bin boot.o kernel.o vga.o gdt.o gdt.s.o idt.o idt.s.o
+	$(LD) -nostdlib -T linker.ld -o kernel.bin boot.o kernel.o vga.o gdt.o gdt.s.o idt.o idt.s.o timer.o
 	mv kernel.bin build/boot/kernel.bin
 	cp grub.cfg build/boot/grub/grub.cfg
 	grub-mkrescue -o build/kernel.iso build/

@@ -4,25 +4,25 @@
 u16* vga;
 u16 cur_x;
 u16 cur_y;
-u8 cur_color;
+u8 color;
 
 void vga_init(void)
 {
     vga = (u16*)VGA_MEMORY;
     cur_x = 0;
     cur_y = 0;
-    cur_color = vga_color(7, 0);
+    color= vga_color(VGA_GRAY, VGA_BLACK);
 
     cursor_enable(0, 14);
 
     for (u32 i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
-        vga[i] = vga_entry(' ', cur_color);
+        vga[i] = vga_entry(' ', color);
     }
 }
 
 void vga_set_color(u8 fg, u8 bg)
 {
-    cur_color = vga_color(fg, bg);
+    color = vga_color(fg, bg);
 }
 
 void vga_scroll(void)
@@ -36,7 +36,7 @@ void vga_scroll(void)
 
     for (u16 x = 0; x < VGA_WIDTH; x++) {
         u16 idx = (VGA_HEIGHT - 1) * VGA_WIDTH + x;
-        vga[idx] = vga_entry(' ', cur_color);
+        vga[idx] = vga_entry(' ', color);
     }
 }
 
@@ -51,7 +51,7 @@ void vga_putchar(char c)
 
         default: {
             u16 idx = cur_y * VGA_WIDTH + cur_x;
-            vga[idx] = vga_entry(c, cur_color);
+            vga[idx] = vga_entry(c, color);
             cur_x++;
             break;
         }

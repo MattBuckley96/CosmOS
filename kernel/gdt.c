@@ -26,7 +26,7 @@ void gdt_init(void)
 
 void gdt_set_gate(u32 num, u32 base, u32 limit, u8 access, u8 gran)
 {
-    gdt[num].base_hi = base & 0xFFFF;
+    gdt[num].base_lo = base & 0xFFFF;
     gdt[num].base_mid = (base >> 16) & 0xFF;
     gdt[num].base_hi = (base >> 24) & 0xFF;
 

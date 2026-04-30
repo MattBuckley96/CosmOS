@@ -1,18 +1,17 @@
 #include "vga.h"
 #include "gdt.h"
 #include "idt.h"
+#include "timer.h"
 
 void kmain(void)
 {
     vga_init();
 
-    vga_print("Initializing GDT...\n");
     gdt_init();
+    vga_print("Initialized GDT\n");
 
-    vga_print("Initializing IDT...\n");
     idt_init();
-
-    vga_putchar(1 / 0);
+    vga_print("Initialized IDT\n");
 
     // splash
     vga_set_color(VGA_WHITE, VGA_BLACK);
@@ -25,4 +24,10 @@ void kmain(void)
     vga_print("OS\n");
 
     vga_set_color(VGA_GRAY, VGA_BLACK);
+
+    timer_init(1000);
+
+    for (;;)
+    {
+    }
 }
