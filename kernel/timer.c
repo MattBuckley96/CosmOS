@@ -22,10 +22,4 @@ void timer_init(u32 freq)
 void timer_irq(idt_regs_t* regs)
 {
     ticks++;
-    vga_print("T");
-}
-
-u64 cur_ticks(void)
-{
-    return ticks;
 }

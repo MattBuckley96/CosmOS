@@ -1,5 +1,6 @@
 #include "vga.h"
 #include "io.h"
+#include <stdarg.h>
 
 u16* vga;
 u16 cur_x;
@@ -42,19 +43,28 @@ void vga_scroll(void)
 
 void vga_putchar(char c)
 {
-    switch (c) {
-        case '\n': {
-            cur_x = 0;
-            cur_y++;
-            break;
-        }
+    u16 idx = cur_y * VGA_WIDTH + cur_x;
 
-        default: {
-            u16 idx = cur_y * VGA_WIDTH + cur_x;
-            vga[idx] = vga_entry(c, color);
-            cur_x++;
-            break;
+    switch (c) {
+    case '\n': 
+        cur_x = 0;
+        cur_y++;
+        break;
+
+    case '\b':
+        if (cur_x == 0 && cur_y > 0) {
+            cur_y--;
+            cur_x = VGA_WIDTH;
         }
+        cur_x--;
+        idx = cur_y * VGA_WIDTH + cur_x;
+        vga[idx] = vga_entry(' ', color);
+        break;
+
+    default:
+        vga[idx] = vga_entry(c, color);
+        cur_x++;
+        break;
     }
 
     if (cur_x >= VGA_WIDTH) {
@@ -75,6 +85,80 @@ void vga_print(const char* s)
     for (u32 i = 0; s[i]; i++) {
         vga_putchar(s[i]);
     }
+}
+
+void vga_puthex(u32 hex)
+{
+    const char* hexnums = "0123456789ABCDEF";
+    char buf[9];
+    buf[8] = '\0';
+
+    for (int i = 7; i >= 0; i--) {
+        buf[i] = hexnums[hex & 0xF];
+        hex >>= 4;
+    }
+
+    for (int i = 0; i < 8; i++) {
+        vga_putchar(buf[i]);
+    }
+}
+
+void vga_putnum(int n)
+{
+    if (n < 0) {
+        vga_putchar('-');
+        n = -n;
+    }
+
+    if (n / 10) {
+        vga_putnum(n / 10);
+    }
+
+    vga_putchar((n % 10) + '0');
+}
+
+void vga_printf(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    while (*fmt) {
+        switch (*fmt) {
+        case '%':
+            fmt++;
+            switch (*fmt) {
+            case 'c': 
+                vga_putchar(va_arg(args, int));
+                break;
+
+            case 'S':
+            case 's': 
+                vga_print(va_arg(args, char*));
+                break;
+
+            case 'D':
+            case 'd':
+            case 'I':
+            case 'i':
+                vga_putnum(va_arg(args, int));
+                break;
+
+            case 'X':
+            case 'x':
+                vga_puthex(va_arg(args, u32));
+                break;
+            }
+            break;
+
+        default:
+            vga_putchar(*fmt);
+            break;
+        }
+
+        fmt++;
+    }
+
+    va_end(args);
 }
 
 void cursor_enable(u8 start, u8 end)
