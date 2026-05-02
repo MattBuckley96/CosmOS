@@ -3,10 +3,13 @@
 #include "idt.h"
 #include "timer.h"
 #include "keyboard.h"
+#include "util.h"
 
 void kmain(void)
 {
     vga_init();
+
+    print_regs();
 
     gdt_init();
     vga_print("Initialized GDT\n");
