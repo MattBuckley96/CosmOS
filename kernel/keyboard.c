@@ -1,6 +1,6 @@
 #include "keyboard.h"
 #include "io.h"
-#include "vga.h"
+#include "util.h"
 
 bool shift;
 bool caps;
@@ -80,9 +80,9 @@ void keyboard_irq(idt_regs_t* regs)
     default:
         if (press == 0) {
             if (shift || caps) {
-                vga_printf("%c", uppercase[scan]);
+                kprintf("%c", uppercase[scan]);
             } else {
-                vga_printf("%c", lowercase[scan]);
+                kprintf("%c", lowercase[scan]);
             }
         }
         break;

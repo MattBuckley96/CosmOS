@@ -1,5 +1,5 @@
+#include <stdarg.h>
 #include "util.h"
-
 #include "types.h"
 #include "vga.h"
 
@@ -11,6 +11,14 @@ void* memset(void* dest, u8 val, u32 size)
         temp[i] = val;
     }
     return dest;
+}
+
+void kprintf(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    vga_vprintf(fmt, args);
+    va_end(args);
 }
 
 void print_regs(void)
@@ -35,22 +43,22 @@ void print_regs(void)
     asm("mov %%ss, %0" : "=r"(ss));
 
     vga_set_color(VGA_LIGHT_GREEN, VGA_BLACK);
-    vga_printf("registers: \n");
+    kprintf("registers: \n");
     vga_set_color(VGA_GRAY, VGA_BLACK);
 
-    vga_printf("eax: %x, ", eax);
-    vga_printf("ebx: %x, ", ebx);
-    vga_printf("ecx: %x\n", ecx);
-    vga_printf("edx: %x, ", edx);
-    vga_printf("esp: %x, ", esp);
-    vga_printf("ebp: %x\n", ebp);
-    vga_printf("esi: %x, ", esi);
-    vga_printf("edi: %x\n", edi);
+    kprintf("eax: %x, ", eax);
+    kprintf("ebx: %x, ", ebx);
+    kprintf("ecx: %x\n", ecx);
+    kprintf("edx: %x, ", edx);
+    kprintf("esp: %x, ", esp);
+    kprintf("ebp: %x\n", ebp);
+    kprintf("esi: %x, ", esi);
+    kprintf("edi: %x\n", edi);
 
-    vga_printf("cs: %x, ", cs);
-    vga_printf("ds: %x, ", ds);
-    vga_printf("es: %x\n", es);
-    vga_printf("fs: %x, ", fs);
-    vga_printf("gs: %x, ", gs);
-    vga_printf("ss: %x\n\n", ss);
+    kprintf("cs: %x, ", cs);
+    kprintf("ds: %x, ", ds);
+    kprintf("es: %x\n", es);
+    kprintf("fs: %x, ", fs);
+    kprintf("gs: %x, ", gs);
+    kprintf("ss: %x\n\n", ss);
 }

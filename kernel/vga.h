@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdarg.h>
 #include "types.h"
 
 #define VGA_MEMORY 0xB8000
@@ -42,7 +43,7 @@ void vga_putchar(char c);
 void vga_print(const char* s);
 void vga_puthex(u32 hex);
 void vga_putnum(int n);
-void vga_printf(const char* fmt, ...);
+void vga_vprintf(const char* fmt, va_list args); 
 
 void cursor_enable(u8 start, u8 end);
 void cursor_disable(void);

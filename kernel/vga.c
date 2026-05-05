@@ -117,11 +117,8 @@ void vga_putnum(int n)
     vga_putchar((n % 10) + '0');
 }
 
-void vga_printf(const char* fmt, ...)
+void vga_vprintf(const char* fmt, va_list args)
 {
-    va_list args;
-    va_start(args, fmt);
-
     while (*fmt) {
         switch (*fmt) {
         case '%':
@@ -157,8 +154,6 @@ void vga_printf(const char* fmt, ...)
 
         fmt++;
     }
-
-    va_end(args);
 }
 
 void cursor_enable(u8 start, u8 end)
