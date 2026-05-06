@@ -4,6 +4,7 @@
 
 bool shift;
 bool caps;
+u8 cur_char;
 
 static const u8 lowercase[] = {
      0,    27, '1', '2',  '3',  '4', '5',  '6',
@@ -79,12 +80,22 @@ void keyboard_irq(idt_regs_t* regs)
 
     default:
         if (press == 0) {
+            const u8* table = lowercase;
             if (shift || caps) {
-                kprintf("%c", uppercase[scan]);
-            } else {
-                kprintf("%c", lowercase[scan]);
+                table = uppercase;
+            }
+            u8 key = table[scan];
+            if (key > 0) {
+                cur_char = key;
             }
         }
         break;
     }
+}
+
+u8 keyboard_getchar(void)
+{
+    u8 c = cur_char;
+    cur_char = 0;
+    return c;
 }

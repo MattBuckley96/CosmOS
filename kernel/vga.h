@@ -38,6 +38,7 @@ static inline u16 vga_entry(char c, u8 color)
 
 void vga_init(void);
 void vga_set_color(u8 fg, u8 bg);
+void vga_clear();
 void vga_scroll(void);
 void vga_putchar(char c);
 void vga_print(const char* s);

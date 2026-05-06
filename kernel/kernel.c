@@ -4,36 +4,37 @@
 #include "timer.h"
 #include "keyboard.h"
 #include "util.h"
+#include "shell.h"
 
 void kmain(void)
 {
     vga_init();
 
-    print_regs();
-
     gdt_init();
-    vga_print("Initialized GDT\n");
+    kprintf("Initialized GDT\n");
 
     idt_init();
-    vga_print("Initialized IDT\n");
+    kprintf("Initialized IDT\n");
 
     timer_init(500);
-    vga_print("Initialized Timer to 500hz\n");
+    kprintf("Initialized Timer to 500hz\n");
 
     keyboard_init();
-    vga_print("Initialized Keyboard\n");
+    kprintf("Initialized Keyboard\n");
 
     // splash
     vga_set_color(VGA_WHITE, VGA_BLACK);
-    vga_print("\nWelcome to the ");
+    kprintf("\nWelcome to the ");
 
     vga_set_color(VGA_LIGHT_MAGENTA, VGA_BLACK);
-    vga_print("Cosm");
+    kprintf("Cosm");
 
     vga_set_color(VGA_LIGHT_YELLOW, VGA_BLACK);
-    vga_print("OS\n");
+    kprintf("OS\n\n");
 
     vga_set_color(VGA_GRAY, VGA_BLACK);
+
+    shell();
 
     for (;;);
 }

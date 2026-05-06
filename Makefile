@@ -19,10 +19,11 @@ kernel:
 	$(CC) $(CFLAGS) -c kernel/timer.c -o timer.o
 	$(CC) $(CFLAGS) -c kernel/keyboard.c -o keyboard.o
 	$(CC) $(CFLAGS) -c kernel/util.c -o util.o
+	$(CC) $(CFLAGS) -c kernel/shell.c -o shell.o
 
 image: clean boot kernel
 	mkdir -p build/boot/grub
-	$(LD) -nostdlib -T linker.ld -o kernel.bin boot.o kernel.o vga.o gdt.o gdt.s.o idt.o idt.s.o timer.o keyboard.o util.o
+	$(LD) -nostdlib -T linker.ld -o kernel.bin boot.o kernel.o vga.o gdt.o gdt.s.o idt.o idt.s.o timer.o keyboard.o util.o shell.o
 	mv kernel.bin build/boot/kernel.bin
 	cp grub.cfg build/boot/grub/grub.cfg
 	grub-mkrescue -o build/kernel.iso build/

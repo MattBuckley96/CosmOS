@@ -10,20 +10,24 @@ u8 color;
 void vga_init(void)
 {
     vga = (u16*)VGA_MEMORY;
-    cur_x = 0;
-    cur_y = 0;
-    color= vga_color(VGA_GRAY, VGA_BLACK);
-
     cursor_enable(0, 14);
 
-    for (u32 i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
-        vga[i] = vga_entry(' ', color);
-    }
+    color = vga_color(VGA_GRAY, VGA_BLACK);
+    vga_clear();
 }
 
 void vga_set_color(u8 fg, u8 bg)
 {
     color = vga_color(fg, bg);
+}
+
+void vga_clear(void)
+{
+    for (u32 i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
+        vga[i] = vga_entry(' ', color);
+    }
+    cur_x = 0;
+    cur_y = 0;
 }
 
 void vga_scroll(void)
