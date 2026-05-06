@@ -116,6 +116,8 @@ void exec_cmd(int argc, char** argv)
         kprintf("\n");
         return;
     }
+
+    kprintf("%s: command not found!\n", argv[0]);
 }
 
 void shell(void)

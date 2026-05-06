@@ -65,6 +65,14 @@ void vga_putchar(char c)
         vga[idx] = vga_entry(' ', color);
         break;
 
+    case '\t':
+        for (int i = 0; i < 4; i++) {
+            vga[idx] = vga_entry(' ', color);
+            cur_x++;
+            idx = cur_y * VGA_WIDTH + cur_x;
+        }
+        break;
+
     default:
         vga[idx] = vga_entry(c, color);
         cur_x++;
