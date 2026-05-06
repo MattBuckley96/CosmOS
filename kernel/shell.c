@@ -9,7 +9,7 @@
 #define BUF_SIZE 512
 #define MAX_ARGS 8
 
-char arg_buf[BUF_SIZE][MAX_ARGS];
+char arg_buf[MAX_ARGS][BUF_SIZE];
 
 void print_prompt(void)
 {
