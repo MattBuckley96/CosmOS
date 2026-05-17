@@ -10,6 +10,11 @@ void kmain(void)
 {
     vga_init();
 
+    kprintf("And then... there was ");
+    vga_set_color(VGA_WHITE, VGA_BLACK);
+    kprintf("light!\n\n");
+    vga_set_color(VGA_GRAY, VGA_BLACK);
+
     gdt_init();
     kprintf("Initialized GDT\n");
 

@@ -48,6 +48,13 @@ void get_line(char* line)
             }
             break;
 
+        case '\t':
+            for (int j = 0; j < 4; j++) {
+                kprintf(" ");
+                line[i++] = ' ';
+            }
+            break;
+
         case '\n':
             kprintf("%c", c);
             return;
