@@ -5,6 +5,7 @@
 #include "keyboard.h"
 #include "util.h"
 #include "shell.h"
+#include "ata.h"
 
 void kmain(void)
 {
@@ -26,6 +27,9 @@ void kmain(void)
 
     keyboard_init();
     kprintf("Initialized Keyboard\n");
+
+    ata_init();
+    kprintf("Initialized ATA drive\n");
 
     // splash
     vga_set_color(VGA_WHITE, VGA_BLACK);

@@ -2,7 +2,7 @@ CC = i686-elf-gcc
 LD = i386-elf-ld
 CFLAGS = -ffreestanding -fno-builtin -Wall -Wextra -g
 
-.PHONY: boot kernel image clean
+.PHONY: boot kernel image clean disk
 
 all: image
 
@@ -20,17 +20,19 @@ kernel:
 	$(CC) $(CFLAGS) -c kernel/keyboard.c -o keyboard.o
 	$(CC) $(CFLAGS) -c kernel/util.c -o util.o
 	$(CC) $(CFLAGS) -c kernel/shell.c -o shell.o
+	$(CC) $(CFLAGS) -c kernel/ata.c -o ata.o
 
 image: clean boot kernel
 	mkdir -p build/boot/grub
-	$(LD) -nostdlib -T linker.ld -o kernel.bin boot.o kernel.o vga.o gdt.o gdt.s.o idt.o idt.s.o timer.o keyboard.o util.o shell.o
+	$(LD) -nostdlib -T linker.ld -o kernel.bin boot.o kernel.o vga.o gdt.o gdt.s.o idt.o idt.s.o timer.o keyboard.o util.o shell.o ata.o
+	rm *.o
 	mv kernel.bin build/boot/kernel.bin
 	cp grub.cfg build/boot/grub/grub.cfg
 	grub-mkrescue -o build/kernel.iso build/
-	rm *.o
+	dd if=build/kernel.iso of=build/kernel.img
 
 run: image
-	qemu-system-i386 build/kernel.iso
+	qemu-system-i386 -hda build/kernel.img
 
 clean:
 	rm -rf build

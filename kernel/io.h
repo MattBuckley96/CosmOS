@@ -25,3 +25,13 @@ static inline u16 inw(u16 port)
     asm volatile("inw %1, %0" : "=a"(val) : "Nd"(port));
     return val;
 }
+
+static inline void insw(u16 port, void* addr, u32 count)
+{
+    asm volatile(
+        "rep insw"
+        : "+D"(addr), "+c"(count)
+        : "d"(port)
+        : "memory"
+    );
+}
