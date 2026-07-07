@@ -14,6 +14,14 @@ inline void* mem_zero(void* addr, u32 size) {
     return memset(addr, 0, size);
 }
 
+s32 strcmp(const u8* a, const u8* b) {
+    while (*a && *b && *a == *b) {
+        a++;
+        b++;
+    }
+    return (s32)(*a) - (s32)(*b);
+}
+
 void kprintf(const u8* fmt, ...) {
     va_list args;
     va_start(args, fmt);

@@ -6,5 +6,7 @@
 #include "util.h"
 #include "cpu/idt.h"
 #include "drivers/keyboard.h"
+#include "drivers/timer.h"
+#include "shell/shell.h"
 
 void panic(const u8* msg);

@@ -14,13 +14,8 @@ void kmain(void) {
 
     idt_init();
     keyboard_init();
-
-    for (;;) {
-        u8 c = keyboard_getchar();
-        if (c) {
-            kprintf("%c", c);
-        }
-    }
+    timer_init(500);
+    shell();
 
     panic("How did we get here?");
 }
