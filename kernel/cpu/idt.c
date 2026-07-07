@@ -1,39 +1,39 @@
 #include "idt.h"
 #include "util.h"
 #include "io.h"
-#include "vga.h"
+#include "console.h"
 
 idt_entry_t idt[256];
-idtr_t idtr;
+idt_desc_t idt_desc;
 irq_handler_t irq_routines[16];
 
-extern void idt_flush(u32 addr);
+extern void lidt(u32 addr);
 
-void idt_init(void)
-{
-    idtr.limit = (sizeof(idt_entry_t) * 256) - 1;
-    idtr.base = (u32)&idt;
+void idt_init(void) {
+    idt_desc.size = (sizeof(idt_entry_t) * 256)- 1;
+    idt_desc.offset = (u32)&idt;
 
-    memset(&idt, 0, sizeof(idt));
-    memset(&irq_routines, 0, sizeof(irq_routines));
+    mem_zero(&idt, sizeof(idt));
+    mem_zero(&irq_routines, sizeof(irq_routines));
 
-    // 0x20 cmd 0x21 data
-    // 0xA0 cmd 0xA1 data
+    // 0x20 cmd, 0x21 data
+    // 0xa0 cmd, 0xa1 data
     outb(0x20, 0x11);
-    outb(0xA0, 0x11);
+    outb(0xa0, 0x11);
 
     outb(0x21, 0x20);
-    outb(0xA1, 0x28);
+    outb(0xa1, 0x28);
 
     outb(0x21, 0x04);
-    outb(0xA1, 0x02);
+    outb(0xa1, 0x02);
 
     outb(0x21, 0x01);
-    outb(0xA1, 0x01);
+    outb(0xa1, 0x01);
 
     outb(0x21, 0x0);
-    outb(0xA1, 0x0);
+    outb(0xa1, 0x0);
 
+    // isrs
     idt_set_gate(0, (u32)isr0, 0x08, 0x8E);
     idt_set_gate(1, (u32)isr1, 0x08, 0x8E);
     idt_set_gate(2, (u32)isr2, 0x08, 0x8E);
@@ -67,6 +67,7 @@ void idt_init(void)
     idt_set_gate(30, (u32)isr30, 0x08, 0x8E);
     idt_set_gate(31, (u32)isr31, 0x08, 0x8E);
 
+    // irqs
     idt_set_gate(32, (u32)irq0, 0x08, 0x8E);
     idt_set_gate(33, (u32)irq1, 0x08, 0x8E);
     idt_set_gate(34, (u32)irq2, 0x08, 0x8E);
@@ -88,19 +89,18 @@ void idt_init(void)
     idt_set_gate(128, (u32)isr128, 0x08, 0x8E);
     idt_set_gate(177, (u32)isr177, 0x08, 0x8E);
 
-    idt_flush((u32)&idtr);
+    lidt((u32)&idt_desc);
 }
 
-void idt_set_gate(u8 num, u32 base, u16 sel, u8 flags)
-{
-    idt[num].base_lo = base & 0xFFFF;
-    idt[num].base_hi = (base >> 16) & 0xFFFF;
+void idt_set_gate(u8 num, u32 offset, u16 sel, u8 flags) {
+    idt[num].offset_lo = offset & 0xffff;
+    idt[num].offset_hi = (offset >> 16) & 0xffff;
     idt[num].sel = sel;
     idt[num].zero = 0;
     idt[num].flags = flags | 0x60;
 }
 
-const char* exeption_msgs[] = {
+const u8* exeption_msgs[] = {
     "Division by zero",
     "Debug",
     "Non maskable interrupt",
@@ -135,29 +135,27 @@ const char* exeption_msgs[] = {
     "Reserved",
 };
 
-void isr_handler(idt_regs_t* regs)
-{
+void isr_handler(idt_regs_t* regs) {
     if (regs->int_no < 32) {
-        vga_set_color(VGA_LIGHT_RED, VGA_BLACK);
-        vga_print(exeption_msgs[regs->int_no]);
+        console_set_color(VGA_LIGHT_RED, VGA_BLACK);
+        console_print(exeption_msgs[regs->int_no]);
         for (;;);
     }
 }
 
-void irq_install(u8 irq, irq_handler_t handler)
-{
+void irq_install(u8 irq, irq_handler_t handler) {
     if (irq < 16) {
         irq_routines[irq] = handler;
     }
 }
 
-void irq_uninstall(u8 irq)
-{
-    irq_routines[irq] = 0;
+void irq_uninstall(u8 irq) {
+    if (irq < 16) {
+        irq_routines[irq] = 0;
+    }
 }
 
-void irq_handler(idt_regs_t* regs)
-{
+void irq_handler(idt_regs_t* regs) {
     u8 irq = (u8)(regs->int_no - 32);
 
     if (irq < 16 && irq_routines[irq]) {
@@ -165,7 +163,7 @@ void irq_handler(idt_regs_t* regs)
     }
 
     if (irq >= 8) {
-        outb(0xA0, 0x20);
+        outb(0xa0, 0x20);
     }
     outb(0x20, 0x20);
 }

@@ -1,5 +1,5 @@
-global idt_flush
-idt_flush:
+global lidt 
+lidt:
     mov eax, [esp + 4]
     lidt [eax]
     sti

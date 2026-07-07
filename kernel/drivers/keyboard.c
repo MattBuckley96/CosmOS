@@ -1,9 +1,10 @@
 #include "keyboard.h"
-#include "io.h"
-#include "util.h"
+#include "cpu/io.h"
 
 bool shift;
 bool caps;
+
+// TODO: probably gonna need a queue
 u8 cur_char;
 
 static const u8 lowercase[] = {

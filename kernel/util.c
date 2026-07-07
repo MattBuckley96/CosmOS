@@ -1,73 +1,84 @@
 #include <stdarg.h>
 #include "util.h"
-#include "types.h"
-#include "vga.h"
+#include "console.h"
 
-void* memset(void* dest, u8 val, u32 size)
-{
-    u8* temp = (u8*)dest;
-    for (u32 i = 0; i < size; i++)
-    {
-        temp[i] = val;
+inline void* memset(void* addr, u8 val, u32 size) {
+    u8* buf = (u8*)addr;
+    for (u32 i = 0; i < size; i++) {
+        buf[i] = val;
     }
-    return dest;
+    return buf;
 }
 
-void kprintf(const char* fmt, ...)
-{
+inline void* mem_zero(void* addr, u32 size) {
+    return memset(addr, 0, size);
+}
+
+void kprintf(const u8* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    vga_vprintf(fmt, args);
-    va_end(args);
-}
 
-void print_regs(void)
-{
-    u32 edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    u32 cs, ds, es, fs, gs, ss;
+    while (*fmt) {
+        switch (*fmt) {
+        case '%':
+            fmt++; // eat the %
+            switch (*fmt) {
+            case 'c':
+                console_putchar(va_arg(args, u32));
+                break;
 
-    asm("mov %%eax, %0" : "=r"(eax));
-    asm("mov %%ebx, %0" : "=r"(ebx));
-    asm("mov %%ecx, %0" : "=r"(ecx));
-    asm("mov %%edx, %0" : "=r"(edx));
-    asm("mov %%esp, %0" : "=r"(esp));
-    asm("mov %%ebp, %0" : "=r"(ebp));
-    asm("mov %%esi, %0" : "=r"(esi));
-    asm("mov %%edi, %0" : "=r"(edi));
+            case 'S':
+            case 's': {
+                u8* str = va_arg(args, u8*);
+                if (str) {
+                    console_print(str);
+                } else {
+                    console_print("(null)");
+                }
+                break;
+            }
 
-    asm("mov %%cs, %0" : "=r"(cs));
-    asm("mov %%ds, %0" : "=r"(ds));
-    asm("mov %%es, %0" : "=r"(es));
-    asm("mov %%fs, %0" : "=r"(fs));
-    asm("mov %%gs, %0" : "=r"(gs));
-    asm("mov %%ss, %0" : "=r"(ss));
+            case 'D':
+            case 'd':
+            case 'I':
+            case 'i':
+                console_putnum(va_arg(args, s32), 10, true, false);
+                break;
 
-    vga_set_color(VGA_LIGHT_GREEN, VGA_BLACK);
-    kprintf("registers: \n");
-    vga_set_color(VGA_GRAY, VGA_BLACK);
+            case 'x':
+                console_putnum(va_arg(args, s32), 16, false, false);
+                break;
 
-    kprintf("eax: %x, ", eax);
-    kprintf("ebx: %x, ", ebx);
-    kprintf("ecx: %x\n", ecx);
-    kprintf("edx: %x, ", edx);
-    kprintf("esp: %x, ", esp);
-    kprintf("ebp: %x\n", ebp);
-    kprintf("esi: %x, ", esi);
-    kprintf("edi: %x\n", edi);
+            case 'X':
+                console_putnum(va_arg(args, s32), 16, false, true);
+                break;
 
-    kprintf("cs: %x, ", cs);
-    kprintf("ds: %x, ", ds);
-    kprintf("es: %x\n", es);
-    kprintf("fs: %x, ", fs);
-    kprintf("gs: %x, ", gs);
-    kprintf("ss: %x\n\n", ss);
-}
+            case 'U':
+            case 'u':
+                console_putnum(va_arg(args, s32), 10, false, false);
+                break;
 
-int strcmp(const char* a, const char* b)
-{
-    while (*a && *b && *a == *b) {
-        a++;
-        b++;
+            case 'b':
+                console_putnum(va_arg(args, s32), 2, false, false);
+                break;
+
+            case 'F':
+                console_set_fg(va_arg(args, u32));
+                break;
+
+            case 'B':
+                console_set_bg(va_arg(args, u32));
+                break;
+            }
+            break;
+
+        default:
+            console_putchar(*fmt);
+            break;
+        }
+
+        fmt++;
     }
-    return (int)(*a) - (int)(*b);
+
+    va_end(args);
 }

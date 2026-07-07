@@ -1,39 +1,44 @@
-CC = i686-elf-gcc
-LD = i386-elf-ld
-CFLAGS = -ffreestanding -fno-builtin -Wall -Wextra -g
+TARGET_PREFIX ?= i386-elf-
+CC := $(TARGET_PREFIX)gcc 
+LD := $(TARGET_PREFIX)ld
 
-.PHONY: boot kernel image clean disk
+CFLAGS := -ffreestanding -fno-builtin -nostdlib -m32
+CFLAGS += -O2 -Wall -g
+CFLAGS += -I. -Ikernel
+CFLAGS += -Wno-pointer-sign
 
-all: image
+LDFLAGS := --oformat binary
+LDFLAGS += -T linker.ld -nostdlib
 
-boot:
-	nasm -f elf32 kernel/boot.s -o boot.o
-	nasm -f elf32 kernel/gdt.s -o gdt.s.o
-	nasm -f elf32 kernel/idt.s -o idt.s.o
+C_SRCS := $(shell find kernel -name '*.c')
+ASM_SRCS := $(shell find kernel -name '*.asm')
+C_OBJS := $(patsubst %.c, %.c.o, $(C_SRCS))
+ASM_OBJS := $(patsubst %.asm, %.asm.o, $(ASM_SRCS))
+OBJS := $(C_OBJS) $(ASM_OBJS)
 
-kernel:
-	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel.o
-	$(CC) $(CFLAGS) -c kernel/vga.c -o vga.o
-	$(CC) $(CFLAGS) -c kernel/gdt.c -o gdt.o
-	$(CC) $(CFLAGS) -c kernel/idt.c -o idt.o
-	$(CC) $(CFLAGS) -c kernel/timer.c -o timer.o
-	$(CC) $(CFLAGS) -c kernel/keyboard.c -o keyboard.o
-	$(CC) $(CFLAGS) -c kernel/util.c -o util.o
-	$(CC) $(CFLAGS) -c kernel/shell.c -o shell.o
-	$(CC) $(CFLAGS) -c kernel/ata.c -o ata.o
+all: kernel.bin
 
-image: clean boot kernel
-	mkdir -p build/boot/grub
-	$(LD) -nostdlib -T linker.ld -o kernel.bin boot.o kernel.o vga.o gdt.o gdt.s.o idt.o idt.s.o timer.o keyboard.o util.o shell.o ata.o
-	rm *.o
-	mv kernel.bin build/boot/kernel.bin
-	cp grub.cfg build/boot/grub/grub.cfg
-	grub-mkrescue -o build/kernel.iso build/
-	dd if=build/kernel.iso of=build/kernel.img
+boot.bin:
+	nasm -f bin boot/boot.asm -o boot.bin
 
-run: image
-	qemu-system-i386 -hda build/kernel.img
+%.c.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.asm.o: %.asm
+	nasm -f elf $< -o $@
+
+kernel.bin: boot.bin $(OBJS)
+	nasm -f elf boot/entry.asm -o entry.o
+	$(LD) $(LDFLAGS) entry.o $(OBJS) -o entry.bin
+	cat boot.bin entry.bin > kernel.bin
+	rm -f $(OBJS) *.o
+	rm -f boot.bin entry.bin
+
+run: kernel.bin
+	qemu-system-i386 kernel.bin -monitor stdio
+
+debug: kernel.bin
+	qemu-system-i386 kernel.bin -monitor stdio -s -S
 
 clean:
-	rm -rf build
-	rm -f *.o
+	rm -f *.o *.bin
