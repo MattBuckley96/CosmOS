@@ -1,4 +1,3 @@
-#include <stdarg.h>
 #include "shell.h"
 #include "types.h"
 #include "util.h"
@@ -10,9 +9,9 @@
 #define MAX_ARGS 8
 
 u8 arg_buf[MAX_ARGS][BUF_SIZE];
+bool running;
 
-void print_prompt(void)
-{
+void print_prompt(void) {
     kprintf("%FCosm%FOS%F:%F/%F$ %F",
         VGA_LIGHT_MAGENTA,
         VGA_LIGHT_YELLOW,
@@ -22,8 +21,7 @@ void print_prompt(void)
         VGA_GRAY);
 }
 
-void get_line(u8* line)
-{
+void get_line(u8* line) {
     u32 i = 0;
 
     while (i < BUF_SIZE) {
@@ -59,8 +57,7 @@ void get_line(u8* line)
     }
 }
 
-void parse_line(u8* line, u32* argc, u8** argv)
-{
+void parse_line(u8* line, u32* argc, u8** argv) {
     mem_zero(arg_buf, sizeof(arg_buf));
 
     *argc = 0;
@@ -86,8 +83,7 @@ void parse_line(u8* line, u32* argc, u8** argv)
     }
 }
 
-void exec_cmd(u32 argc, u8** argv)
-{
+void exec_cmd(u32 argc, u8** argv) {
     if (argc < 1) {
         return;
     }
@@ -97,9 +93,15 @@ void exec_cmd(u32 argc, u8** argv)
         return;
     }
 
-    if (strcmp(argv[0], "exit") == 0) {
+    if (strcmp(argv[0], "shutdown") == 0) {
         // qemu shutdown
         outw(0x604, 0x2000);
+        return;
+    }
+
+    if (strcmp(argv[0], "exit") == 0) {
+        // qemu shutdown
+        running = false;
         return;
     }
 
@@ -114,9 +116,10 @@ void exec_cmd(u32 argc, u8** argv)
     kprintf("%s: command not found!\n", argv[0]);
 }
 
-void shell(void)
-{
-    for (;;) {
+void shell(void) {
+    running = true;
+
+    while (running) {
         u8 line[BUF_SIZE];
         u32 argc = 0;
         u8* argv[MAX_ARGS];
