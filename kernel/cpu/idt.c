@@ -1,7 +1,7 @@
 #include "idt.h"
 #include "util.h"
 #include "io.h"
-#include "console.h"
+#include "kernel.h"
 
 idt_entry_t idt[256];
 idt_desc_t idt_desc;
@@ -137,8 +137,7 @@ const u8* exeption_msgs[] = {
 
 void isr_handler(idt_regs_t* regs) {
     if (regs->int_no < 32) {
-        console_set_color(VGA_LIGHT_RED, VGA_BLACK);
-        console_print(exeption_msgs[regs->int_no]);
+        panic(exeption_msgs[regs->int_no]);
         for (;;);
     }
 }

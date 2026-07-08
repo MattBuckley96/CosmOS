@@ -21,3 +21,7 @@ void timer_irq(idt_regs_t* regs) {
 
     ticks++;
 }
+
+u32 get_ticks(void) {
+    return ticks;
+}

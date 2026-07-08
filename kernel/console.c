@@ -1,26 +1,26 @@
 #include "console.h"
 #include "cpu/io.h"
 
-volatile u16* screen = (u16*)0xb8000;
+volatile u16* screen = (u16*)0xB8000;
 u16 row;
 u16 col;
 u8 color;
 
 static void cursor_enable(u8 start, u8 end) {
-    outb(0x3d4, 0x0a);
-	outb(0x3d5, (inb(0x3d5) & 0xc0) | start);
+    outb(0x3D4, 0x0A);
+	outb(0x3D5, (inb(0x3D5) & 0xC0) | start);
 
-	outb(0x3d4, 0x0b);
-	outb(0x3d5, (inb(0x3d5) & 0xe0) | end);
+	outb(0x3D4, 0x0B);
+	outb(0x3D5, (inb(0x3D5) & 0xE0) | end);
 }
 
 static void cursor_update(u8 col, u8 row) {
     u16 pos = row * CONSOLE_WIDTH + col;
 
-    outb(0x3d4, 0x0f);
-    outb(0x3d5, (u8)(pos & 0xff));
-    outb(0x3d4, 0x0e);
-    outb(0x3d5, (u8)((pos >> 8) & 0xff));
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, (u8)(pos & 0xFF));
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (u8)((pos >> 8) & 0xFF));
 }
 
 static void scroll(void) {
@@ -50,11 +50,11 @@ void console_set_color(u8 fg, u8 bg) {
 }
 
 void console_set_fg(u8 fg) {
-    color = (color & ~0x0f) | (fg & 0x0f);
+    color = (color & ~0x0F) | (fg & 0x0F);
 }
 
 void console_set_bg(u8 bg) {
-    color = (color & ~0xf0) | (bg & 0xf0);
+    color = (color & ~0xF0) | (bg & 0xF0);
 }
 
 void console_clear(void) {

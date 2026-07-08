@@ -15,6 +15,7 @@ void kmain(void) {
     idt_init();
     keyboard_init();
     timer_init(500);
+    ata_init();
     shell();
 
     panic("How did we get here?");

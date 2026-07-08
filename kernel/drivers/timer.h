@@ -5,3 +5,4 @@
 
 void timer_init(u32 freq);
 void timer_irq(idt_regs_t* regs);
+u32 get_ticks(void);

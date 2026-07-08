@@ -29,15 +29,13 @@ static const u8 uppercase[] = {
      0,   ' ',
 };
 
-void keyboard_init(void)
-{
+void keyboard_init(void) {
     shift = false;
     caps = false;
     irq_install(1, &keyboard_irq);
 }
 
-void keyboard_irq(idt_regs_t* regs)
-{
+void keyboard_irq(idt_regs_t* regs) {
     (void)regs;
 
     u8 scan = inb(0x60) & 0x7F;
@@ -94,8 +92,7 @@ void keyboard_irq(idt_regs_t* regs)
     }
 }
 
-u8 keyboard_getchar(void)
-{
+u8 keyboard_getchar(void) {
     u8 c = cur_char;
     cur_char = 0;
     return c;
