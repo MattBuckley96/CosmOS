@@ -5,6 +5,8 @@ KERNEL_LOC equ 0x1000
 KERNEL_ADDR equ 0x100000
 CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
+BOOT_INFO equ 0x7000
+MMAP_ADDR equ 0x8000
 
 start16:
     mov [boot_drive], dl   
@@ -18,11 +20,11 @@ start16:
     mov sp, bp
     sti
 
-    ; set video mode
+set_video:
     mov ax, 0x0003
     int 0x10
 
-    ; load kernel
+load_kernel:
     mov ah, 0x02
     mov al, 25
     mov ch, 0
@@ -31,8 +33,14 @@ start16:
     mov dl, [boot_drive]
     mov bx, KERNEL_LOC
     int 0x13
-    jc disk_err
-
+    jc .error
+    jmp .done
+.error:
+    mov si, disk_err_msg
+    call print
+    hlt
+    jmp $
+.done:
 
 check_a20:
     in al, 0x92
@@ -42,7 +50,40 @@ check_a20:
     and al, 0xFE
     out 0x92, al
 .done:
-    ; load gdt
+
+detect_memory: 
+    mov di, MMAP_ADDR
+    xor ebx, ebx
+    mov word [mmap_entry_count], 0
+.next:
+    mov eax, 0xE820
+    mov edx, 0x534D4150
+    mov ecx, 24
+    mov [es:di + 20], dword 1 ; force ACPI 3.X entry
+    int 0x15
+    jc .error
+
+    cmp eax, 0x534D4150
+    jne .error
+
+    add di, 24
+    inc word [mmap_entry_count]
+    test ebx, ebx
+    jne .next
+
+.done:
+    mov dword [BOOT_INFO], MMAP_ADDR
+    movzx eax, word [mmap_entry_count]
+    mov dword [BOOT_INFO + 4], eax
+    jmp load_gdt
+
+.error:
+    mov si, mmap_err_msg
+    call print
+    hlt
+    jmp $
+
+load_gdt:
     cli
     lgdt [gdt_desc]
 
@@ -51,11 +92,6 @@ check_a20:
     mov cr0, eax
 
     jmp CODE_SEG:start32
-
-disk_err:
-    mov si, disk_err_msg
-    call print
-    jmp $
 
 print:
     mov ah, 0x0E
@@ -70,6 +106,9 @@ print:
 
 boot_drive:
     db 0
+
+mmap_entry_count:
+    dw 0
 
 gdt_start:
     gdt_null:
@@ -95,7 +134,11 @@ gdt_desc:
     dw gdt_end - gdt_start - 1
     dd gdt_start
 
-disk_err_msg: db "[boot]: disk error!", 0
+disk_err_msg: 
+    db "[boot]: disk error!", 0
+
+mmap_err_msg:
+    db "[boot] memory map error!", 0
 
 bits 32
 start32:
@@ -108,6 +151,7 @@ start32:
     mov ebp, 0x90000
     mov esp, ebp
 
+move_kernel:
     ; HACK: don't leave this
     cld
     mov esi, KERNEL_LOC
@@ -115,6 +159,7 @@ start32:
     mov ecx, 10000
     rep movsd
 
+    mov eax, BOOT_INFO
     jmp KERNEL_ADDR
 
 times 510-($-$$) db 0

@@ -7,7 +7,7 @@ void panic(const u8* msg) {
     for (;;);
 }
 
-void kmain(void) {
+void kmain(boot_info_t* boot_info) {
     console_init();
 
     kprintf("Let there be %Flight!%F\n\n", VGA_WHITE, VGA_GRAY);
@@ -16,6 +16,13 @@ void kmain(void) {
     keyboard_init();
     timer_init(500);
     ata_init();
+
+    mmap_t mmap = {
+        .entry_count = boot_info->mmap_entries,
+        .entries = (mmap_entry_t*)boot_info->mmap_addr,
+    };
+    memory_init(&mmap);
+
     shell();
 
     panic("How did we get here?");

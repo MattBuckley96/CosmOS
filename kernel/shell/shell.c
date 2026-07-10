@@ -12,7 +12,8 @@ u8 arg_buf[MAX_ARGS][BUF_SIZE];
 bool running;
 
 void print_prompt(void) {
-    kprintf("%FCosm%FOS%F:%F/%F$ %F",
+    kprintf("%F[%FCosm%FOS%F:%F/%F]# %F",
+        VGA_WHITE,
         VGA_LIGHT_MAGENTA,
         VGA_LIGHT_YELLOW,
         VGA_WHITE,

@@ -35,7 +35,7 @@ kernel.bin: boot.bin $(OBJS)
 	rm -f boot.bin entry.bin
 
 run: kernel.bin
-	qemu-system-i386 -enable-kvm kernel.bin -monitor stdio
+	qemu-system-i386 -enable-kvm kernel.bin -monitor stdio -m 4096
 
 debug: kernel.bin
 	qemu-system-i386 kernel.bin -monitor stdio -s -S
