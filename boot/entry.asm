@@ -11,6 +11,7 @@ extern kmain
 global _start
 _start:
     mov esp, stack_top
+    mov ebp, esp
 
     push eax ; boot_info
     call kmain

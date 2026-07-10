@@ -5,11 +5,15 @@ KERNEL_LOC equ 0x1000
 KERNEL_ADDR equ 0x100000
 CODE_SEG equ gdt_code - gdt_start
 DATA_SEG equ gdt_data - gdt_start
+
+; TODO: this may end up overridden by kernel 
+; if it gets too big.
+; also its dangerously close to 0x7C00
 BOOT_INFO equ 0x7000
 MMAP_ADDR equ 0x8000
 
 start16:
-    mov [boot_drive], dl   
+    mov [boot_drive], dl
 
     cli
     xor ax, ax
@@ -148,16 +152,14 @@ start32:
     mov es, ax
     mov fs, ax
     mov gs, ax
-    mov ebp, 0x90000
-    mov esp, ebp
 
 move_kernel:
     ; HACK: don't leave this
     cld
     mov esi, KERNEL_LOC
     mov edi, KERNEL_ADDR
-    mov ecx, 10000
-    rep movsd
+    mov ecx, 40000
+    rep movsb
 
     mov eax, BOOT_INFO
     jmp KERNEL_ADDR

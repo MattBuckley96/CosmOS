@@ -1,6 +1,8 @@
 #include "memory.h"
-#include "console.h"
-#include "util.h"
+#include "kernel.h"
+
+u32 memory = 0;
+u32 free = 0;
 
 void memory_init(mmap_t* mmap) {
     kprintf("%F[%Fmemory%F]%F\n",
@@ -18,10 +20,16 @@ void memory_init(mmap_t* mmap) {
                 continue;
             }
 
-            kprintf("Addr: %X\n", addr);
-            kprintf("Size: %X\n", size);
+            if (addr == 0x100000) {
+                u32 kernel_size = (u32)&kernel_end - (u32)&kernel_start;
+                memory = (addr + kernel_size);
+
+                free = (end - kernel_size);
+            }
         }
     }
 
+    kprintf("first address at: %X\n", memory);
+    kprintf("mem free: %u MiB\n", (free / 1024 / 1024));
     kprintf("\n");
 }

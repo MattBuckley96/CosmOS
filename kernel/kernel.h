@@ -21,4 +21,7 @@ typedef struct boot_info {
 } boot_info_t;
 #pragma pack()
 
+extern u8* kernel_start;
+extern u8* kernel_end;
+
 void panic(const u8* msg);

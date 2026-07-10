@@ -1,5 +1,15 @@
 #pragma once
 
+/*
+ * memory layout so far:
+ *
+ * --------------------------------------------------------------------
+ * | 0x1000 |  0x7000   |  0x8000    | 0x100000 | 0x200000-0xFFFFFFFF |
+ * --------------------------------------------------------------------
+ *   kernel   boot_info  mmap_entries   kernel          free?
+ *
+ */
+
 #include "types.h"
 
 #pragma pack(1)
