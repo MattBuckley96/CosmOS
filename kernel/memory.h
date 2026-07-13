@@ -12,6 +12,9 @@
 
 #include "types.h"
 
+#define PAGE_SIZE 4096
+#define ALIGN_UP(n, align) (((n) + ((align) - 1)) & ~((align) - 1))
+
 #pragma pack(1)
 typedef struct mmap_entry {
     u64 addr;
@@ -27,3 +30,4 @@ typedef struct mmap {
 #pragma pack()
 
 void memory_init(mmap_t* mmap);
+void* malloc(u32 size);

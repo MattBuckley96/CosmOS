@@ -1,8 +1,25 @@
 #include "memory.h"
 #include "kernel.h"
 
-u32 memory = 0;
-u32 free = 0;
+u32 start;
+u32 max;
+u32 pos;
+
+// malloc gives full 4K pages back
+// TODO: implement proper heap
+void* malloc(u32 size) {
+    void* ptr = 0;
+    u32 aligned = ALIGN_UP(size, PAGE_SIZE);
+
+    if ((pos + aligned) > max) {
+        panic("out of memory!");
+    }
+
+    ptr = (void*)pos;
+    pos += aligned;
+
+    return ptr;
+}
 
 void memory_init(mmap_t* mmap) {
     kprintf("%F[%Fmemory%F]%F\n",
@@ -20,16 +37,25 @@ void memory_init(mmap_t* mmap) {
                 continue;
             }
 
-            if (addr == 0x100000) {
-                u32 kernel_size = (u32)&kernel_end - (u32)&kernel_start;
-                memory = (addr + kernel_size);
-
-                free = (end - kernel_size);
+            // skip regions below kernel
+            // TODO: may revisit later
+            if (addr < 0x100000) {
+                continue;
             }
+
+            kprintf("addr: %X\n", addr);
+            kprintf("size: %X\n", size);
+
+            u32 kernel_size = (u32)&kernel_end - (u32)&kernel_start;
+            kernel_size = ALIGN_UP(kernel_size, PAGE_SIZE);
+
+            // only stores the first region beyond the kernel
+            // TODO: combine different regions
+            start = (kernel_size + addr);
+            pos = start;
+            max = end;
+            break;
         }
     }
-
-    kprintf("first address at: %X\n", memory);
-    kprintf("mem free: %u MiB\n", (free / 1024 / 1024));
     kprintf("\n");
 }

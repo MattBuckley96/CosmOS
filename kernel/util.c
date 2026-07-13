@@ -53,6 +53,7 @@ void kprintf(const u8* fmt, ...) {
                 console_putnum(va_arg(args, s32), 10, true, false);
                 break;
 
+            case 'p':
             case 'x':
                 console_putnum(va_arg(args, s32), 16, false, false);
                 break;
