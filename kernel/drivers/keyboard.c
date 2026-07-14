@@ -1,11 +1,12 @@
 #include "keyboard.h"
 #include "cpu/io.h"
+#include "util.h"
 
 bool shift;
 bool caps;
 
-// TODO: probably gonna need a queue
-u8 cur_char;
+u8 buf[32];
+u8 buf_pos;
 
 static const u8 lowercase[] = {
      0,    27, '1', '2',  '3',  '4', '5',  '6',
@@ -33,6 +34,8 @@ void keyboard_init(void) {
     shift = false;
     caps = false;
     irq_install(1, &keyboard_irq);
+    mem_zero(buf, sizeof(buf));
+    buf_pos = 0;
 }
 
 void keyboard_irq(idt_regs_t* regs) {
@@ -85,7 +88,8 @@ void keyboard_irq(idt_regs_t* regs) {
             }
             u8 key = table[scan];
             if (key > 0) {
-                cur_char = key;
+                buf[buf_pos] = key;
+                buf_pos++;
             }
         }
         break;
@@ -93,7 +97,12 @@ void keyboard_irq(idt_regs_t* regs) {
 }
 
 u8 keyboard_getchar(void) {
-    u8 c = cur_char;
-    cur_char = 0;
+    if (buf_pos == 0) {
+        return 0;
+    }
+
+    buf_pos--;
+    u8 c = buf[buf_pos];
+
     return c;
 }

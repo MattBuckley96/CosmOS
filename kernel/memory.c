@@ -22,9 +22,6 @@ void* malloc(u32 size) {
 }
 
 void memory_init(mmap_t* mmap) {
-    kprintf("%F[%Fmemory%F]%F\n",
-        VGA_WHITE, VGA_LIGHT_GREEN, VGA_WHITE, VGA_GRAY);
-
     for (u32 i = 0; i < mmap->entry_count; i++) {
         if (mmap->entries[i].type == 1) {
             u64 addr = mmap->entries[i].addr;
@@ -43,9 +40,6 @@ void memory_init(mmap_t* mmap) {
                 continue;
             }
 
-            kprintf("addr: %X\n", addr);
-            kprintf("size: %X\n", size);
-
             u32 kernel_size = (u32)&kernel_end - (u32)&kernel_start;
             kernel_size = ALIGN_UP(kernel_size, PAGE_SIZE);
 
@@ -57,5 +51,12 @@ void memory_init(mmap_t* mmap) {
             break;
         }
     }
-    kprintf("\n");
+}
+
+u32 get_total_memory(void) {
+    return (max - start);
+}
+
+u32 get_used_memory(void) {
+    return (pos - start);
 }

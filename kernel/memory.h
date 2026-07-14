@@ -31,3 +31,5 @@ typedef struct mmap {
 
 void memory_init(mmap_t* mmap);
 void* malloc(u32 size);
+u32 get_total_memory(void);
+u32 get_used_memory(void);

@@ -4,6 +4,7 @@
 #include "console.h"
 #include "cpu/io.h"
 #include "drivers/keyboard.h"
+#include "memory.h"
 
 #define BUF_SIZE 512
 #define MAX_ARGS 8
@@ -112,6 +113,19 @@ void exec_cmd(u32 argc, u8** argv) {
         } 
         kprintf("\n");
         return;
+    }
+
+    if (strcmp(argv[0], "memory") == 0) {
+        kprintf("%F[%Fmemory%F]%F\n",
+            VGA_WHITE, VGA_LIGHT_GREEN, VGA_WHITE, VGA_GRAY);
+
+        u32 used = get_used_memory();
+        u32 total = get_total_memory();
+
+        kprintf("total free: %u\n", (total - used));
+        kprintf("total used: %u\n", used);
+        return;
+
     }
 
     kprintf("%s: command not found!\n", argv[0]);
