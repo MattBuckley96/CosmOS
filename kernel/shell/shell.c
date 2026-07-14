@@ -121,8 +121,9 @@ void exec_cmd(u32 argc, u8** argv) {
 
         u32 used = get_used_memory();
         u32 total = get_total_memory();
+        u32 free = total - used;
 
-        kprintf("total free: %u\n", (total - used));
+        kprintf("total free: %u (%u MiB)\n", free, (free / 1024 / 1024));
         kprintf("total used: %u\n", used);
         return;
 

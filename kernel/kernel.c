@@ -23,8 +23,6 @@ void kmain(boot_info_t* boot_info) {
     };
     memory_init(&mmap);
 
-    u32* x = malloc(sizeof(u32));
-
     shell();
 
     panic("How did we get here?");

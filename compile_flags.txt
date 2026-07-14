@@ -1,9 +1,13 @@
 -I.
 -Ikernel
--funsigned-char
+
 -Wno-pointer-sign
 -Wno-pointer-to-int-cast
--ffreestanding
--fno-builtin
--nostdlib
+
 -m32
+
+-ffreestanding
+-funsigned-char
+-fno-builtin
+
+-nostdlib
