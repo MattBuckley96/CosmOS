@@ -31,6 +31,9 @@ static const u8 uppercase[] = {
 };
 
 void keyboard_init(void) {
+    // flush buf
+    inb(0x60);
+
     shift = false;
     caps = false;
     irq_install(1, &keyboard_irq);

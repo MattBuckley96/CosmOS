@@ -20,9 +20,11 @@ start16:
     mov ds, ax
     mov ss, ax
     mov es, ax
-    mov bp, 0x7C00
-    mov sp, bp
+    mov sp, 0x6000
     sti
+
+    mov si, boot_msg
+    call print
 
 set_video:
     mov ax, 0x0003
@@ -143,6 +145,9 @@ disk_err_msg:
 
 mmap_err_msg:
     db "[boot] memory map error!", 0
+
+boot_msg:
+    db "[boot] booting...", 0
 
 bits 32
 start32:

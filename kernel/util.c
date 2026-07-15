@@ -14,12 +14,29 @@ inline void* mem_zero(void* addr, u32 size) {
     return memset(addr, 0, size);
 }
 
+void* memcpy(void* dest, const void* src, u32 size) {
+    u8* d = (u8*)dest;
+    u8* s = (u8*)src;
+
+    for (u32 i = 0; i < size; i++) {
+        d[i] = s[i];
+    }
+    return dest;
+}
+
 s32 strcmp(const u8* a, const u8* b) {
     while (*a && *b && *a == *b) {
         a++;
         b++;
     }
     return (s32)(*a) - (s32)(*b);
+}
+
+u8* strcpy(u8* dest, const u8* src) {
+    for (u32 i = 0; src[i]; i++) {
+        dest[i] = src[i];
+    }
+    return dest;
 }
 
 void kprintf(const u8* fmt, ...) {

@@ -16,7 +16,7 @@ C_OBJS := $(patsubst %.c, %.c.o, $(C_SRCS))
 ASM_OBJS := $(patsubst %.asm, %.asm.o, $(ASM_SRCS))
 OBJS := $(C_OBJS) $(ASM_OBJS)
 
-all: kernel.bin
+all: kernel.img
 
 boot.bin:
 	nasm -f bin boot/boot.asm -o boot.bin
@@ -34,11 +34,16 @@ kernel.bin: boot.bin $(OBJS)
 	rm -f $(OBJS) *.o
 	rm -f boot.bin entry.bin
 
-run: kernel.bin
-	qemu-system-i386 -enable-kvm kernel.bin -monitor stdio -m 512
+kernel.img: kernel.bin
+	dd if=kernel.bin of=kernel.img
+	dd if=/dev/null of=kernel.img bs=1 count=0 seek=10M
+	rm -f *.bin
 
-debug: kernel.bin
-	qemu-system-i386 kernel.bin -monitor stdio -s -S -m 512
+run: kernel.img
+	qemu-system-i386 -enable-kvm -hda kernel.img -monitor stdio -m 512
+
+debug: kernel.img
+	qemu-system-i386 -hda kernel.img -monitor stdio -s -S -m 512
 
 clean:
-	rm -f *.o *.bin
+	rm -f *.o *.bin *.img

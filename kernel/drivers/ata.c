@@ -44,6 +44,8 @@
 #define CMD_READ_SECTORS 0x20
 #define CMD_WRITE_SECTORS 0x30
 
+u32 lba_count;
+
 static void delay(void) {
     for (u32 i = 0; i < 4; i++) {
         inb(REG_ALT_STATUS);
@@ -62,8 +64,8 @@ static void wait_drq(void) {
 }
 
 static void cache_flush(void) {
-    outb(REG_CMD, CMD_CACHE_FLUSH);
     wait_bsy_rdy();
+    outb(REG_CMD, CMD_CACHE_FLUSH);
 }
 
 static void ata_error(const u8* msg) {
@@ -72,9 +74,13 @@ static void ata_error(const u8* msg) {
 }
 
 void ata_init(void) {
-    outb(REG_CMD, CMD_CACHE_FLUSH);
-    delay();
+    wait_bsy_rdy();
+    outb(REG_DRIVE, 0xA0);
 
+    wait_bsy_rdy();
+    outb(REG_CMD, CMD_CACHE_FLUSH);
+
+    wait_bsy_rdy();
     outb(REG_SECTOR_COUNT, 0);
     outb(REG_LBA_LO, 0);
     outb(REG_LBA_MID, 0);
@@ -82,19 +88,13 @@ void ata_init(void) {
     outb(REG_CMD, CMD_IDENTIFY);
 
     u16 buf[256];
+    wait_drq();
     insw(REG_DATA, buf, 256);
 
-    if (inb(REG_STATUS) == 0) {
-        ata_error("No drive found!");
-        return;
+    if (buf[83] & (1 << 10)) {
+        lba_count = ((u32)buf[61] << 16) |
+                        ((u32)buf[60]);
     }
-
-    if (inb(REG_LBA_MID) || inb(REG_LBA_HI)) {
-        ata_error("Drive not ata!");
-        return;
-    }
-
-    wait_bsy_rdy();
 
     ata_read_sectors(0, &buf, 1);
     if (buf[255] != 0xAA55) {
@@ -105,8 +105,9 @@ void ata_init(void) {
 
 void ata_read_sectors(u32 lba, void* out, u8 count) {
     wait_bsy_rdy();
-
     outb(REG_DRIVE, 0xE0 | ((lba >> 24) & 0x0F));
+
+    wait_bsy_rdy();
     outb(REG_SECTOR_COUNT, count);
     outb(REG_LBA_LO, (u8)lba);
     outb(REG_LBA_MID, (u8)(lba >> 8));
@@ -125,8 +126,9 @@ void ata_read_sectors(u32 lba, void* out, u8 count) {
 
 void ata_write_sectors(u32 lba, void* in, u8 count) {
     wait_bsy_rdy();
-
     outb(REG_DRIVE, 0xE0 | ((lba >> 24) & 0x0F));
+
+    wait_bsy_rdy();
     outb(REG_SECTOR_COUNT, count);
     outb(REG_LBA_LO, (u8)lba);
     outb(REG_LBA_MID, (u8)(lba >> 8));
@@ -145,4 +147,8 @@ void ata_write_sectors(u32 lba, void* in, u8 count) {
     }
 
     cache_flush();
+}
+
+u32 ata_get_lba_count(void) {
+    return lba_count;
 }
