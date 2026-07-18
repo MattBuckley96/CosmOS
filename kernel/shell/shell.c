@@ -2,9 +2,10 @@
 #include "types.h"
 #include "util.h"
 #include "console.h"
+#include "memory.h"
 #include "cpu/io.h"
 #include "drivers/keyboard.h"
-#include "memory.h"
+#include "drivers/ata.h"
 
 #define BUF_SIZE 512
 #define MAX_ARGS 8
@@ -126,7 +127,18 @@ void exec_cmd(u32 argc, u8** argv) {
         kprintf("total free: %u (%u MiB)\n", free, (free / 1024 / 1024));
         kprintf("total used: %u\n", used);
         return;
+    }
 
+    if (strcmp(argv[0], "start") == 0) {
+        // HACK: it works, but wtf am i thinking
+        typedef int (*entry_t)(void);
+
+        void* addr = malloc(512);
+        ata_read_sectors(26, addr, 1);
+
+        entry_t entry = (entry_t)addr;
+        entry();
+        return;
     }
 
     kprintf("%s: command not found!\n", argv[0]);

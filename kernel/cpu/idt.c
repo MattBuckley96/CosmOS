@@ -137,6 +137,7 @@ const u8* exeption_msgs[] = {
 
 void isr_handler(idt_regs_t* regs) {
     if (regs->int_no < 32) {
+        kprintf("err code: %u\n", regs->err_code);
         panic(exeption_msgs[regs->int_no]);
         for (;;);
     }

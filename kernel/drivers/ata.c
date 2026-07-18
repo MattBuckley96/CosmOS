@@ -98,7 +98,7 @@ void ata_init(void) {
 
     ata_read_sectors(0, &buf, 1);
     if (buf[255] != 0xAA55) {
-        ata_error("Drive not bootable!");
+        ata_error("drive not bootable!");
         return;
     }
 }
