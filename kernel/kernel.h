@@ -14,6 +14,8 @@
 
 #include "shell/shell.h"
 
+#include "fs/fs.h"
+
 #pragma pack(1)
 typedef struct boot_info {
     u32 mmap_addr;

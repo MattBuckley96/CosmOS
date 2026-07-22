@@ -23,6 +23,8 @@ void kmain(boot_info_t* boot_info) {
     };
     memory_init(&mmap);
 
+    fs_init();
+
     shell();
 
     panic("How did we get here?");

@@ -6,6 +6,7 @@
 #include "cpu/io.h"
 #include "drivers/keyboard.h"
 #include "drivers/ata.h"
+#include "fs/fs.h"
 
 #define BUF_SIZE 512
 #define MAX_ARGS 8
@@ -134,10 +135,60 @@ void exec_cmd(u32 argc, u8** argv) {
         typedef int (*entry_t)(void);
 
         void* addr = malloc(512);
-        ata_read_sectors(26, addr, 1);
+        ata_read_sectors(35, addr, 1);
 
         entry_t entry = (entry_t)addr;
         entry();
+        return;
+    }
+
+    if (strcmp(argv[0], "fscreate") == 0) {
+        fs_create();
+        return;;
+    }
+
+    if (strcmp(argv[0], "fsinfo") == 0) {
+        fs_print();
+        return;;
+    }
+
+    if (strcmp(argv[0], "stat") == 0) {
+        u8 id = *argv[1] - '0';
+
+        inode_t inode;
+        fs_get_inode(id, &inode);
+
+        kprintf("type: ");
+        if (inode.type == FS_FILE) {
+            kprintf("file\n");
+        }
+        if (inode.type == FS_DIR) {
+            kprintf("dir\n");
+        }
+
+        kprintf("size: %u\n", inode.size);
+        kprintf("blocks: %u\n", inode_get_block_count(id));
+        return;
+    }
+
+    if (strcmp(argv[0], "read") == 0) {
+        u8 id = *argv[1] - '0';
+
+        inode_t inode;
+        fs_get_inode(id, &inode);
+
+        u8 buf[inode.size];
+        u32 read = inode_read(id, buf, inode.size);
+        buf[read] = '\0';
+
+        kprintf("%s\n", buf);
+
+        kprintf("bytes read: %u\n", read);
+        return;
+    }
+
+    if (strcmp(argv[0], "ls") == 0) {
+        fs_list_dir(1);
         return;
     }
 
@@ -161,3 +212,4 @@ void shell(void) {
         exec_cmd(argc, argv);
     }
 }
+

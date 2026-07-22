@@ -32,7 +32,7 @@ set_video:
 
 load_kernel:
     mov ah, 0x02
-    mov al, 33
+    mov al, 34
     mov ch, 0
     mov cl, 2
     mov dh, 0
@@ -163,7 +163,7 @@ move_kernel:
     cld
     mov esi, KERNEL_LOC
     mov edi, KERNEL_ADDR
-    mov ecx, 40000
+    mov ecx, 50000
     rep movsb
 
     mov eax, BOOT_INFO

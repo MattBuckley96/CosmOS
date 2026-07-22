@@ -46,7 +46,7 @@ kernel.bin: boot.bin $(OBJS) test.bin
 	nasm -f elf boot/entry.asm -o entry.o
 	$(LD) $(LDFLAGS) entry.o $(OBJS) -o entry.bin
 	cat boot.bin entry.bin > kernel.bin
-	dd if=/dev/null of=kernel.bin bs=1 count=0 seek=13312
+	dd if=/dev/null of=kernel.bin bs=512 count=0 seek=34
 	cat test.bin >> kernel.bin
 	rm -f $(OBJS) *.o
 	rm -f entry.bin boot.bin test.bin
