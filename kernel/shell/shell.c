@@ -135,7 +135,7 @@ void exec_cmd(u32 argc, u8** argv) {
         typedef int (*entry_t)(void);
 
         void* addr = malloc(512);
-        ata_read_sectors(35, addr, 1);
+        ata_read_sectors(34, addr, 1);
 
         entry_t entry = (entry_t)addr;
         entry();

@@ -34,7 +34,7 @@ test.bin:
 	# nasm -f bin test/test.asm -o test.bin
 	$(CC) -m32 -ffreestanding -fno-pic -fno-pie -nostartfiles -c test/test.c -o test.o
 	$(LD) \
-		-Ttext 0x10A000 \
+		-Ttext 0x10B000 \
 		-e main \
 		-o test.elf \
 		test.o
@@ -45,11 +45,12 @@ test.bin:
 kernel.bin: boot.bin $(OBJS) test.bin
 	nasm -f elf boot/entry.asm -o entry.o
 	$(LD) $(LDFLAGS) entry.o $(OBJS) -o entry.bin
+	rm -f $(OBJS) *.o
 	cat boot.bin entry.bin > kernel.bin
+	rm -f entry.bin boot.bin 
 	dd if=/dev/null of=kernel.bin bs=512 count=0 seek=34
 	cat test.bin >> kernel.bin
-	rm -f $(OBJS) *.o
-	rm -f entry.bin boot.bin test.bin
+	rm -f test.bin
 
 kernel.img: kernel.bin
 	dd if=kernel.bin of=kernel.img
