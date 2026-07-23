@@ -14,6 +14,9 @@
 u8 arg_buf[MAX_ARGS][BUF_SIZE];
 bool running;
 
+// start at root
+u32 cwd = 1;
+
 void print_prompt(void) {
     kprintf("%F[%FCosm%FOS%F:%F/%F]# %F",
         VGA_WHITE,
@@ -153,7 +156,16 @@ void exec_cmd(u32 argc, u8** argv) {
     }
 
     if (strcmp(argv[0], "stat") == 0) {
-        u8 id = *argv[1] - '0';
+        if (argc < 2) {
+            kprintf("%s: usage: %s <file-name>\n", argv[0], argv[0]);
+            return;
+        }
+
+        u32 id = fs_dir_find(1, argv[1]);
+        if (id == 0) {
+            kprintf("%s: couldn't open file: %s!\n", argv[0], argv[1]);
+            return;
+        }
 
         inode_t inode;
         fs_get_inode(id, &inode);
@@ -172,7 +184,11 @@ void exec_cmd(u32 argc, u8** argv) {
     }
 
     if (strcmp(argv[0], "read") == 0) {
-        u8 id = *argv[1] - '0';
+        u32 id = fs_dir_find(1, argv[1]);
+        if (id == 0) {
+            kprintf("%s: couldn't open file: %s!\n", argv[0], argv[1]);
+            return;
+        }
 
         inode_t inode;
         fs_get_inode(id, &inode);
@@ -188,7 +204,49 @@ void exec_cmd(u32 argc, u8** argv) {
     }
 
     if (strcmp(argv[0], "ls") == 0) {
-        fs_list_dir(1);
+        u32 id = cwd;
+        if (argc > 1) {
+            id = fs_dir_find(cwd, argv[1]);
+            if (id == 0) {
+                kprintf("%s: couldn't open file: %s!\n", argv[0], argv[1]);
+                return;
+            }
+        }
+        fs_list_dir(id);
+        return;
+    }
+
+    if (strcmp(argv[0], "mkdir") == 0) {
+        if (argc < 2) {
+            kprintf("%s: usage: %s <file-name>\n", argv[0], argv[0]);
+            return;
+        }
+
+        u32 id = fs_dir_find(cwd, argv[1]);
+        if (id > 0) {
+            kprintf("%s: the town ain't big enough for the two of %s\n", argv[0], argv[1]);
+            return;
+        }
+
+        id = fs_create_dir(cwd, argv[1]);
+        if (id == 0) {
+            kprintf("%s: failed to create directory!\n", argv[0]);
+            return;
+        }
+        return;
+    }
+    if (strcmp(argv[0], "cd") == 0) {
+        if (argc < 2) {
+            return;
+        }
+
+        u32 id = fs_dir_find(cwd, argv[1]);
+        if (id == 0) {
+            kprintf("%s: directory doesn't exist\n!", argv[0]);
+            return;
+        }
+
+        cwd = id;
         return;
     }
 

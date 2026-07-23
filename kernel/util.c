@@ -32,6 +32,17 @@ s32 strcmp(const u8* a, const u8* b) {
     return (s32)(*a) - (s32)(*b);
 }
 
+u32 strlen(const u8* str) {
+    u32 len = 0;
+
+    while (*str) {
+        len++;
+        str++;
+    }
+
+    return len;
+}
+
 s32 memcmp(const u8* a, const u8* b, u32 size) {
     while (size && *a == *b) {
         a++;

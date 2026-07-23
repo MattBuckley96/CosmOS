@@ -31,25 +31,21 @@ static u32 fs_create_root(void) {
     };
     fs_update_inode(id, &inode);
 
-    u8 root_buf[513];
+    dentry_t self = {
+        .id = id,
+        .type = inode.type,
+        .name_len = 1
+    };
+    fs_add_dir_entry(id, &self, ".");
 
-    mem_zero(root_buf, sizeof(root_buf));
-    dentry_t* dentry = (dentry_t*)root_buf;
-    dentry->id = id;
-    dentry->name_len = 1;
-    dentry->type = FS_DIR;
-    memcpy(root_buf + sizeof(dentry_t), ".", 1);
-    dentry->entry_len = sizeof(dentry_t) + dentry->name_len;
-    inode_write(id, root_buf, dentry->entry_len);
+    dentry_t parent = {
+        .id = id,
+        .type = inode.type,
+        .name_len = 2
+    };
+    fs_add_dir_entry(id, &parent, "..");
 
-    mem_zero(root_buf, sizeof(root_buf));
-    dentry = (dentry_t*)root_buf;
-    dentry->id = id;
-    dentry->name_len = 2;
-    dentry->type = FS_DIR;
-    memcpy(root_buf + sizeof(dentry_t), "..", 2);
-    dentry->entry_len = sizeof(dentry_t) + dentry->name_len;
-    inode_write(id, root_buf, dentry->entry_len);
+    fs_create_dir(id, "test");
 
     return id;
 }
@@ -425,6 +421,17 @@ u32 inode_read(u32 id, void* out, u32 size) {
     return bytes_read;
 }
 
+void fs_add_dir_entry(u32 id, dentry_t* dentry, const u8* name) {
+    u8 buf[512];
+    mem_zero(buf, sizeof(buf));
+
+    dentry->entry_len = sizeof(dentry_t) + dentry->name_len;
+    memcpy(buf, dentry, sizeof(dentry_t));
+    memcpy(buf + sizeof(dentry_t), name, dentry->name_len);
+
+    inode_write(id, buf, dentry->entry_len);
+}
+
 void fs_list_dir(u32 id) {
     inode_t inode;
     fs_get_inode(id, &inode);
@@ -433,7 +440,7 @@ void fs_list_dir(u32 id) {
         return;
     }
 
-    // HACK: 1 extra dentry to be able to read the next null length
+    // 1 extra dentry to be able to read the next null length
     u8 buf[inode.size + sizeof(dentry_t)];
     mem_zero(buf, sizeof(buf));
     u8* ptr = (u8*)buf;
@@ -462,4 +469,74 @@ void fs_list_dir(u32 id) {
 
         ptr += dentry->entry_len;
     }
+
+    console_set_fg(VGA_GRAY);
+}
+
+// TODO: check for existing directory
+u32 fs_create_dir(u32 parent_id, const u8* name) {
+    u32 id = fs_alloc_inode();
+    if (id == 0) {
+        return 0;
+    }
+
+    inode_t inode = {
+        .type = FS_DIR,
+    };
+    fs_update_inode(id, &inode);
+
+    dentry_t self = {
+        .id = id,
+        .type = inode.type,
+        .name_len = 1
+    };
+    fs_add_dir_entry(id, &self, ".");
+
+    self.name_len = strlen(name);
+    fs_add_dir_entry(parent_id, &self, name);
+
+    dentry_t parent = {
+        .id = parent_id,
+        .type = inode.type,
+        .name_len = 2
+    };
+    fs_add_dir_entry(id, &parent, "..");
+
+    return id;
+}
+
+u32 fs_dir_find(u32 id, const u8* name) {
+    inode_t inode;
+    fs_get_inode(id, &inode);
+    if (inode.type != FS_DIR) {
+        return 0;
+    }
+
+    u8 buf[inode.size + sizeof(dentry_t)];
+    mem_zero(buf, sizeof(buf));
+    u8* ptr = (u8*)buf;
+
+    inode_read(id, buf, inode.size);
+
+    for (;;) {
+        dentry_t* dentry = (dentry_t*)ptr;
+        
+        if (dentry->entry_len == 0) {
+            break;
+        }
+
+        u32 name_pos = sizeof(dentry_t);
+
+        u8 entry_name[dentry->name_len + 1];
+        memcpy(&entry_name, (ptr + name_pos), dentry->name_len);
+        entry_name[dentry->name_len] = '\0';
+
+        if (memcmp(entry_name, name, dentry->name_len) == 0) {
+            return dentry->id;
+        }
+
+        ptr += dentry->entry_len;
+    }
+
+    return 0;
 }

@@ -56,5 +56,7 @@ void inode_alloc_blocks(u32 id, u32 count);
 u32 inode_write(u32 id, void* in, u32 size);
 u32 inode_read(u32 id, void* out, u32 size);
 
+void fs_add_dir_entry(u32 id, dentry_t* dentry, const u8* name);
 void fs_list_dir(u32 id);
-u32 fs_create_dir(const u8* path);
+u32 fs_create_dir(u32 parent_id, const u8* name);
+u32 fs_dir_find(u32, const u8* name);
