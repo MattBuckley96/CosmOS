@@ -313,7 +313,37 @@ void exec_cmd(u32 argc, u8** argv) {
             return;
         }
 
-        fs_delete_file(cwd, argv[1]);
+        inode_t inode;
+        fs_get_inode(id, &inode);
+        if (inode.type == FS_DIR) {
+            kprintf("%s: %s is a directory, use rmdir\n", argv[0], argv[1]);
+            return;
+        }
+
+        fs_delete_file(cwd, id);
+        return;
+    }
+
+    if (strcmp(argv[0], "rmdir") == 0) {
+        if (argc < 2) {
+            kprintf("%s: usage: %s <file-name>\n", argv[0], argv[0]);
+            return;
+        }
+
+        u32 id = fs_dir_find(cwd, argv[1]);
+        if (id == 0) {
+            kprintf("%s: couldn't find file: %s\n", argv[0], argv[1]);
+            return;
+        }
+
+        inode_t inode;
+        fs_get_inode(id, &inode);
+        if (inode.type == FS_FILE) {
+            kprintf("%s: %s is a file, use rm\n", argv[0], argv[1]);
+            return;
+        }
+
+        fs_delete_dir(id);
         return;
     }
 

@@ -62,4 +62,5 @@ u32 fs_create_dir(u32 parent_id, const u8* name);
 u32 fs_dir_find(u32 id, const u8* name);
 
 u32 fs_create_file(u32 parent_id, const u8* name);
-void fs_delete_file(u32 parent_id, const u8* name);
+void fs_delete_file(u32 parent_id, u32 id);
+void fs_delete_dir(u32 id);

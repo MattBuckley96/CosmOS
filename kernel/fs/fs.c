@@ -569,7 +569,7 @@ u32 fs_create_file(u32 parent_id, const u8* name) {
     return id;
 }
 
-void fs_delete_file(u32 parent_id, const u8* name) {
+void fs_delete_file(u32 parent_id, u32 id) {
     inode_t parent_inode;
     fs_get_inode(parent_id, &parent_inode);
     if (parent_inode.type == 0) {
@@ -593,13 +593,7 @@ void fs_delete_file(u32 parent_id, const u8* name) {
             break;
         }
 
-        u32 name_pos = sizeof(dentry_t);
-
-        u8 entry_name[dentry->name_len + 1];
-        memcpy(&entry_name, (ptr + name_pos), dentry->name_len);
-        entry_name[dentry->name_len] = '\0';
-
-        if (memcmp(entry_name, name, dentry->name_len) == 0) {
+        if (dentry->id == id) {
             break;
         }
 
@@ -622,4 +616,53 @@ void fs_delete_file(u32 parent_id, const u8* name) {
     memcpy(block_buf, buf, parent_inode.size);
 
     ata_write_sectors(block, (block_buf + (block_idx * 512)), 1);
+}
+
+void fs_delete_dir(u32 id) {
+    inode_t inode;
+    fs_get_inode(id, &inode);
+    if (inode.type != FS_DIR) {
+        return;
+    }
+
+    u32 entry_num = 0;
+    u8 buf[inode.size + sizeof(dentry_t)];
+    u8* ptr = (u8*)buf;
+
+    mem_zero(buf, sizeof(buf));
+
+    inode_read(id, buf, inode.size);
+
+    for (;;) {
+        dentry_t* dentry = (dentry_t*)ptr;
+
+        if (dentry->entry_len == 0) {
+            break;
+        }
+
+        // skip past . and ..
+        if (entry_num < 2) {
+            ptr += dentry->entry_len;
+            entry_num++;
+            continue;
+        }
+
+        inode_t entry_inode;
+        fs_get_inode(dentry->id, &entry_inode);
+
+        if (inode.type == FS_FILE) {
+            fs_delete_file(id, dentry->id);
+        } else if (inode.type == FS_DIR) {
+            fs_delete_dir(dentry->id);
+        }
+
+        ptr += dentry->entry_len;
+    }
+
+    u32 parent_id = fs_dir_find(id, "..");
+    if (parent_id == 0) {
+        return;
+    }
+
+    fs_delete_file(parent_id, id);
 }
