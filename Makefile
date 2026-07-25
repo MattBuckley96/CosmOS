@@ -1,5 +1,5 @@
 TARGET_PREFIX ?= i386-elf-
-CC := $(TARGET_PREFIX)gcc 
+CC := $(TARGET_PREFIX)gcc
 LD := $(TARGET_PREFIX)ld
 
 CFLAGS := -ffreestanding -fno-builtin -nostdlib -m32
@@ -34,13 +34,13 @@ test.bin:
 	# nasm -f bin test/test.asm -o test.bin
 	$(CC) -m32 -ffreestanding -fno-pic -fno-pie -nostartfiles -c test/test.c -o test.o
 	$(LD) \
-		-Ttext 0x10B000 \
+		-Ttext 0x10C000 \
 		-e main \
 		-o test.elf \
 		test.o
 	objdump -S test.elf
 	objcopy -O binary test.elf test.bin
-	rm test.elf
+	rm -f test.elf
 
 kernel.bin: boot.bin $(OBJS) test.bin
 	nasm -f elf boot/entry.asm -o entry.o
@@ -63,4 +63,4 @@ debug: kernel.img
 	qemu-system-i386 -hda kernel.img -monitor stdio -s -S -m 512
 
 clean:
-	rm -f *.o *.bin *.img
+	rm -f *.o *.bin *.img *.map

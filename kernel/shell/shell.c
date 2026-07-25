@@ -181,7 +181,7 @@ void exec_cmd(u32 argc, u8** argv) {
         typedef int (*entry_t)(void);
 
         void* addr = malloc(512);
-        ata_read_sectors(34, addr, 1);
+        ata_read_sectors(42, addr, 1);
 
         entry_t entry = (entry_t)addr;
         entry();
@@ -298,6 +298,22 @@ void exec_cmd(u32 argc, u8** argv) {
             kprintf("%s: failed to create file!\n", argv[0]);
             return;
         }
+        return;
+    }
+
+    if (strcmp(argv[0], "rm") == 0) {
+        if (argc < 2) {
+            kprintf("%s: usage: %s <file-name>\n", argv[0], argv[0]);
+            return;
+        }
+
+        u32 id = fs_dir_find(cwd, argv[1]);
+        if (id == 0) {
+            kprintf("%s: couldn't find file: %s\n", argv[0], argv[1]);
+            return;
+        }
+
+        fs_delete_file(cwd, argv[1]);
         return;
     }
 

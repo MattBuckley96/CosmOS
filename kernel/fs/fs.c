@@ -156,11 +156,21 @@ u32 fs_alloc_inode(void) {
 void fs_free_inode(u32 id) {
     u32 bit = id - 1;
 
+    inode_t inode;
+    fs_get_inode(id, &inode);
+    if (inode.type == 0) {
+        return;
+    }
+
+    for (u32 i = 0; i < inode_get_block_count(id); i++) {
+        fs_free_block(inode.direct[i]);
+    }
+
     if (!bitmap_get_bit(inode_bitmap, bit)) {
         return;
     }
 
-    bitmap_set_bit(inode_bitmap, bit);
+    bitmap_clear_bit(inode_bitmap, bit);
 
     super.free_inodes_count++;
     fs_update();
@@ -240,7 +250,7 @@ void fs_free_block(u32 block) {
         return;
     }
 
-    bitmap_set_bit(block_bitmap, block);
+    bitmap_clear_bit(block_bitmap, block);
 
     super.free_blocks_count++;
     fs_update();
@@ -557,4 +567,59 @@ u32 fs_create_file(u32 parent_id, const u8* name) {
     fs_add_dir_entry(parent_id, &self, name);
 
     return id;
+}
+
+void fs_delete_file(u32 parent_id, const u8* name) {
+    inode_t parent_inode;
+    fs_get_inode(parent_id, &parent_inode);
+    if (parent_inode.type == 0) {
+        return;
+    }
+
+    u32 file_pos = 0;
+    u8 buf[parent_inode.size + sizeof(dentry_t)];
+    u8* ptr = (u8*)buf;
+    dentry_t* prev = 0;
+    dentry_t* dentry = 0;
+
+    mem_zero(buf, sizeof(buf));
+
+    inode_read(parent_id, buf, parent_inode.size);
+
+    for (;;) {
+        dentry = (dentry_t*)ptr;
+        
+        if (dentry->entry_len == 0) {
+            break;
+        }
+
+        u32 name_pos = sizeof(dentry_t);
+
+        u8 entry_name[dentry->name_len + 1];
+        memcpy(&entry_name, (ptr + name_pos), dentry->name_len);
+        entry_name[dentry->name_len] = '\0';
+
+        if (memcmp(entry_name, name, dentry->name_len) == 0) {
+            break;
+        }
+
+        prev = dentry;
+        ptr += dentry->entry_len;
+        file_pos += dentry->entry_len;
+    }
+
+    u32 block_idx = file_pos / 512;
+    u32 block = parent_inode.direct[block_idx];
+
+    prev->entry_len += dentry->entry_len;
+    fs_free_inode(dentry->id);
+
+    mem_zero(dentry, dentry->entry_len);
+
+    // NOTE: keeping zeros in tact is slow but nice for debugging
+    u8 block_buf[512];
+    mem_zero(block_buf, sizeof(block_buf));
+    memcpy(block_buf, buf, parent_inode.size);
+
+    ata_write_sectors(block, (block_buf + (block_idx * 512)), 1);
 }
