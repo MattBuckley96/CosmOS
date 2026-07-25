@@ -2,7 +2,7 @@
 #include "../kernel/console.h"
 
 typedef void (*kprintf_t)(const u8*, ...);
-#define kprintf ((kprintf_t)0x001015FC)
+#define kprintf ((kprintf_t)0x00101A08)
 
 int main() {
     kprintf("%FHello%F from another %FWorld!\n%F",

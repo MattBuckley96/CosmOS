@@ -46,7 +46,7 @@ void get_line(u8* line) {
             break;
 
         case '\t':
-            for (int j = 0; j < 4; j++) {
+            for (u32 j = 0; j < 4; j++) {
                 kprintf(" ");
                 line[i++] = ' ';
             }
@@ -113,10 +113,53 @@ void exec_cmd(u32 argc, u8** argv) {
     }
 
     if (strcmp(argv[0], "echo") == 0) {
+        u8 buf[512];
+        u32 pos = 0;
+        mem_zero(buf, sizeof(buf));
+
         for (u32 i = 1; i < argc; i++) {
-            kprintf("%s ", argv[i]);
+            if (strcmp(argv[i], ">>") == 0) {
+                buf[pos] = '\0';
+                i++; // next arg
+                if (i >= argc) {
+                    kprintf("%s: please enter a valid file name\n", argv[0]);
+                    return;
+                }
+
+                u8* file_name = argv[i];
+
+                u32 id = fs_dir_find(cwd, file_name);
+                if (id == 0) {
+                    id = fs_create_file(cwd, file_name);
+                    if (id == 0) {
+                        kprintf("%s: couldnt open file: %s\n", argv[0], file_name);
+                        return;
+                    }
+                }
+
+                inode_t inode;
+                fs_get_inode(id, &inode);
+                if (inode.type == FS_DIR) {
+                    kprintf("%s: can't write to a directory!\n", argv[0]);
+                    return;
+                }
+
+                // (pos - 1) to not write extra space
+                u32 written = inode_write(id, buf, pos - 1);
+                if (written == 0) {
+                    kprintf("%s: failed to write to file: %s\n", argv[0], file_name);
+                }
+
+                return;
+            }
+
+            while (*argv[i]) {
+                buf[pos] = *argv[i]++;
+                pos++;
+            }
+            buf[pos++] = ' ';
         } 
-        kprintf("\n");
+        kprintf("%s\n", buf);
         return;
     }
 
@@ -145,7 +188,7 @@ void exec_cmd(u32 argc, u8** argv) {
         return;
     }
 
-    if (strcmp(argv[0], "fscreate") == 0) {
+    if (strcmp(argv[0], "mkfs") == 0) {
         fs_create();
         return;;
     }
@@ -161,7 +204,7 @@ void exec_cmd(u32 argc, u8** argv) {
             return;
         }
 
-        u32 id = fs_dir_find(1, argv[1]);
+        u32 id = fs_dir_find(cwd, argv[1]);
         if (id == 0) {
             kprintf("%s: couldn't open file: %s!\n", argv[0], argv[1]);
             return;
@@ -169,6 +212,8 @@ void exec_cmd(u32 argc, u8** argv) {
 
         inode_t inode;
         fs_get_inode(id, &inode);
+
+        kprintf("inode: %u\n", id);
 
         kprintf("type: ");
         if (inode.type == FS_FILE) {
@@ -184,7 +229,7 @@ void exec_cmd(u32 argc, u8** argv) {
     }
 
     if (strcmp(argv[0], "read") == 0) {
-        u32 id = fs_dir_find(1, argv[1]);
+        u32 id = fs_dir_find(cwd, argv[1]);
         if (id == 0) {
             kprintf("%s: couldn't open file: %s!\n", argv[0], argv[1]);
             return;
@@ -235,6 +280,27 @@ void exec_cmd(u32 argc, u8** argv) {
         }
         return;
     }
+
+    if (strcmp(argv[0], "touch") == 0) {
+        if (argc < 2) {
+            kprintf("%s: usage: %s <file-name>\n", argv[0], argv[0]);
+            return;
+        }
+
+        u32 id = fs_dir_find(cwd, argv[1]);
+        if (id > 0) {
+            kprintf("%s: the town ain't big enough for the two of %s\n", argv[0], argv[1]);
+            return;
+        }
+
+        id = fs_create_file(cwd, argv[1]);
+        if (id == 0) {
+            kprintf("%s: failed to create file!\n", argv[0]);
+            return;
+        }
+        return;
+    }
+
     if (strcmp(argv[0], "cd") == 0) {
         if (argc < 2) {
             return;
@@ -243,6 +309,14 @@ void exec_cmd(u32 argc, u8** argv) {
         u32 id = fs_dir_find(cwd, argv[1]);
         if (id == 0) {
             kprintf("%s: directory doesn't exist\n!", argv[0]);
+            return;
+        }
+
+        inode_t inode;
+        fs_get_inode(id, &inode);
+
+        if (inode.type != FS_DIR) {
+            kprintf("%s: %s is not a directory\n", argv[0], argv[1]);
             return;
         }
 

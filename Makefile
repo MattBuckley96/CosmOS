@@ -48,7 +48,7 @@ kernel.bin: boot.bin $(OBJS) test.bin
 	rm -f $(OBJS) *.o
 	cat boot.bin entry.bin > kernel.bin
 	rm -f entry.bin boot.bin 
-	dd if=/dev/null of=kernel.bin bs=512 count=0 seek=34
+	dd if=/dev/null of=kernel.bin bs=512 count=0 seek=42
 	cat test.bin >> kernel.bin
 	rm -f test.bin
 
@@ -57,7 +57,7 @@ kernel.img: kernel.bin
 	dd if=/dev/null of=kernel.img bs=1 count=0 seek=10M
 
 run: kernel.img
-	qemu-system-i386 -enable-kvm -hda kernel.img -monitor stdio -m 512
+	qemu-system-i386 -hda kernel.img -monitor stdio -m 512
 
 debug: kernel.img
 	qemu-system-i386 -hda kernel.img -monitor stdio -s -S -m 512

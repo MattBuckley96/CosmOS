@@ -60,3 +60,5 @@ void fs_add_dir_entry(u32 id, dentry_t* dentry, const u8* name);
 void fs_list_dir(u32 id);
 u32 fs_create_dir(u32 parent_id, const u8* name);
 u32 fs_dir_find(u32, const u8* name);
+
+u32 fs_create_file(u32 parent_id, const u8* name);

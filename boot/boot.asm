@@ -32,7 +32,7 @@ set_video:
 
 load_kernel:
     mov ah, 0x02
-    mov al, 34
+    mov al, 42
     mov ch, 0
     mov cl, 2
     mov dh, 0

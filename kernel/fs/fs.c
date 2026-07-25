@@ -3,7 +3,7 @@
 
 #define MAX_INODES 2048
 #define MAX_BLOCKS 4096
-#define SUPERBLOCK_START 40
+#define SUPERBLOCK_START 100
 
 u8 fs_buf[512];
 u8 inode_bitmap[256];
@@ -44,8 +44,6 @@ static u32 fs_create_root(void) {
         .name_len = 2
     };
     fs_add_dir_entry(id, &parent, "..");
-
-    fs_create_dir(id, "test");
 
     return id;
 }
@@ -436,7 +434,6 @@ void fs_list_dir(u32 id) {
     inode_t inode;
     fs_get_inode(id, &inode);
     if (inode.type != FS_DIR) {
-        kprintf("not a directory!\n");
         return;
     }
 
@@ -539,4 +536,25 @@ u32 fs_dir_find(u32 id, const u8* name) {
     }
 
     return 0;
+}
+
+u32 fs_create_file(u32 parent_id, const u8* name) {
+    u32 id = fs_alloc_inode();
+    if (id == 0) {
+        return 0;
+    }
+
+    inode_t inode = {
+        .type = FS_FILE,
+    };
+    fs_update_inode(id, &inode);
+
+    dentry_t self = {
+        .id = id,
+        .type = inode.type,
+        .name_len = strlen(name),
+    };
+    fs_add_dir_entry(parent_id, &self, name);
+
+    return id;
 }
