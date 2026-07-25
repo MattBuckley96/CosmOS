@@ -649,8 +649,12 @@ void fs_delete_dir(u32 id) {
 
         inode_t entry_inode;
         fs_get_inode(dentry->id, &entry_inode);
+        if (entry_inode.type == 0) {
+            ptr += dentry->entry_len;
+            continue;
+        }
 
-        if (inode.type == FS_FILE) {
+        if (entry_inode.type == FS_FILE) {
             fs_delete_file(id, dentry->id);
         } else if (inode.type == FS_DIR) {
             fs_delete_dir(dentry->id);
