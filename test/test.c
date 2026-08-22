@@ -1,12 +1,11 @@
 #include "../kernel/types.h"
-#include "../kernel/console.h"
 
 typedef void (*kprintf_t)(const u8*, ...);
-#define kprintf ((kprintf_t)0x00101A08)
+#define kprintf ((kprintf_t)0x00101D44)
 
-int main() {
-    kprintf("%FHello%F from another %FWorld!\n%F",
-        VGA_LIGHT_YELLOW, VGA_GRAY, VGA_LIGHT_GREEN, VGA_GRAY); 
+static const u8* msg = "test";
 
+int main(void) {
+    kprintf("%s\n", msg);
     return 0;
 }

@@ -48,7 +48,7 @@ static u32 fs_create_root(void) {
     return id;
 }
 
-void fs_create(void) {
+u32 fs_create(void) {
     memcpy(super.magic, "CosmOSFS", 8);
 
     u32 start = SUPERBLOCK_START;
@@ -65,7 +65,24 @@ void fs_create(void) {
 
     fs_update();
 
-    fs_create_root();
+    u32 root = fs_create_root();
+    if (root == 0) {
+        return 0;
+    }
+
+    u32 id = fs_create_file(root, "test.bin");
+    if (id == 0) {
+        return 0;
+    }
+
+    // patch test.bin into the filesystem
+    // TODO: store test.bin somewhere cleaner
+    // - maybe extra drive??
+    u8 buf[512];
+    ata_read_sectors(42, buf, 1);
+    inode_write(id, buf, 512);
+
+    return root;
 }
 
 void fs_print(void) {

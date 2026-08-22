@@ -8,7 +8,7 @@ CFLAGS += -I. -Ikernel
 CFLAGS += -Wno-pointer-sign
 
 LDFLAGS := --oformat binary
-LDFLAGS += -T linker.ld -nostdlib
+LDFLAGS += -T kernel.ld -nostdlib
 LDFLAGS += -Map=kernel.map
 
 C_SRCS := $(shell find kernel -name '*.c')
@@ -31,16 +31,10 @@ boot.bin:
 	nasm -f elf $< -o $@
 
 test.bin:
-	# nasm -f bin test/test.asm -o test.bin
-	$(CC) -m32 -ffreestanding -fno-pic -fno-pie -nostartfiles -c test/test.c -o test.o
-	$(LD) \
-		-Ttext 0x10C000 \
-		-e main \
-		-o test.elf \
-		test.o
-	objdump -S test.elf
-	objcopy -O binary test.elf test.bin
-	rm -f test.elf
+	# O2 needed bc stupid GOT gets bypassed bc optimizations
+	$(CC) -m32 -fpie -O2 -fno-plt -fvisibility=hidden -nostdlib -ffreestanding -c test/test.c -o test.o
+	$(LD) -m elf_i386 -Ttext 0x0 --oformat binary --defsym=_GLOBAL_OFFSET_TABLE_=0 --entry=main test.o -o test.bin
+	objdump -D -b binary -m i386 test.bin
 
 kernel.bin: boot.bin $(OBJS) test.bin
 	nasm -f elf boot/entry.asm -o entry.o

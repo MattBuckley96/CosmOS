@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "cpu/io.h"
 #include "drivers/keyboard.h"
-#include "drivers/ata.h"
+#include "drivers/timer.h"
 #include "fs/fs.h"
 
 #define BUF_SIZE 512
@@ -176,12 +176,25 @@ void exec_cmd(u32 argc, u8** argv) {
         return;
     }
 
-    if (strcmp(argv[0], "start") == 0) {
-        // HACK: it works, but wtf am i thinking
+    if (strcmp(argv[0], "run") == 0) {
+        if (argc < 2) {
+            kprintf("%s: usage: %s <file-name>\n", argv[0], argv[0]);
+            return;
+        }
+
+        u32 id = fs_dir_find(cwd, argv[1]);
+        if (id == 0) {
+            kprintf("%s: couldn't open file: %s\n", argv[0], argv[1]);
+            return;
+        }
+        
+        inode_t inode;
+        fs_get_inode(id, &inode);
+
         typedef int (*entry_t)(void);
 
-        void* addr = malloc(512);
-        ata_read_sectors(42, addr, 1);
+        void* addr = malloc(inode.size);
+        inode_read(id, addr, inode.size); 
 
         entry_t entry = (entry_t)addr;
         entry();
@@ -190,12 +203,12 @@ void exec_cmd(u32 argc, u8** argv) {
 
     if (strcmp(argv[0], "mkfs") == 0) {
         fs_create();
-        return;;
+        return;
     }
 
     if (strcmp(argv[0], "fsinfo") == 0) {
         fs_print();
-        return;;
+        return;
     }
 
     if (strcmp(argv[0], "stat") == 0) {
@@ -367,6 +380,11 @@ void exec_cmd(u32 argc, u8** argv) {
         }
 
         cwd = id;
+        return;
+    }
+
+    if (strcmp(argv[0], "ticks") == 0) {
+        kprintf("ticks: %u\n", get_ticks());
         return;
     }
 

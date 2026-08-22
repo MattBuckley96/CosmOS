@@ -34,7 +34,7 @@ typedef struct dentry {
 } dentry_t;
 #pragma pack()
 
-void fs_create(void);
+u32 fs_create(void);
 void fs_init(void);
 void fs_print(void);
 void fs_update(void);
@@ -58,9 +58,10 @@ u32 inode_read(u32 id, void* out, u32 size);
 
 void fs_add_dir_entry(u32 id, dentry_t* dentry, const u8* name);
 void fs_list_dir(u32 id);
-u32 fs_create_dir(u32 parent_id, const u8* name);
 u32 fs_dir_find(u32 id, const u8* name);
+u32 fs_create_dir(u32 parent_id, const u8* name);
+void fs_delete_dir(u32 id);
 
 u32 fs_create_file(u32 parent_id, const u8* name);
 void fs_delete_file(u32 parent_id, u32 id);
-void fs_delete_dir(u32 id);
+
